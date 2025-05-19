@@ -1,0 +1,18 @@
+edition = "2021"
+
+# 设置最大行宽
+max_width = 80
+
+# 是否在结构体的字段之间添加空行
+# struct_field_align_threshold = 30
+
+# 是否强制对齐匹配分支中的箭头
+match_block_trailing_comma = true
+
+# 使用小驼峰命名法
+force_explicit_abi = false
+
+# 在函数定义、调用等地方强制使用小括号
+fn_params_layout = "Tall"
+
+

@@ -1,0 +1,15 @@
+[workspace]
+members = [ "api", 
+  "app",
+  "domain", 
+  "domain_core", 
+  "event", 
+  "infra"
+]
+
+resolver = "2"
+
+
+[workspace.metadata.cargo-run-bin]
+# 指定当运行 `cargo run` 时，默认运行哪个成员中的哪个二进制目标
+default = "infra::infra_app" 
