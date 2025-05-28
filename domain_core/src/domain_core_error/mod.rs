@@ -1,6 +1,7 @@
 use thiserror::Error;
 
 use crate::user::user_error::UserError;
+use crate::venue::venue_error::VenueError;
 
 pub type DomainCoreResult<T> = std::result::Result<T,DomainCoreError>;
 
@@ -11,6 +12,9 @@ pub type DomainCoreResult<T> = std::result::Result<T,DomainCoreError>;
 pub enum DomainCoreError {
     #[error(transparent)]
     UserError(#[from] UserError),
+
+    #[error(transparent)]
+    VenueError(#[from] VenueError),
 
     #[error("Build entity fail,cause:{0}")]
     EntityBuildFail(String),
