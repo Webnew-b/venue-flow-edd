@@ -1,4 +1,3 @@
-use domain::user_domain::UserValidation;
 use garde::Validate;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
