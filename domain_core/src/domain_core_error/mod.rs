@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+use crate::rental::rental_error::RentalError;
 use crate::user::user_error::UserError;
 use crate::venue::venue_error::VenueError;
 
@@ -15,6 +16,9 @@ pub enum DomainCoreError {
 
     #[error(transparent)]
     VenueError(#[from] VenueError),
+
+    #[error(transparent)]
+    RentalError(#[from] RentalError),
 
     #[error("Build entity fail,cause:{0}")]
     EntityBuildFail(String),
