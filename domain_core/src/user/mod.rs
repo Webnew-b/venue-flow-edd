@@ -36,6 +36,30 @@ pub enum UserGender {
     PreferNotToSay,
 }
 
+impl UserGender {
+    pub fn get_gender(gender:&str) -> Option<Self>{
+        match gender {
+            "male" => Some(Self::Male),
+            "female" => Some(Self::Female),
+            "non-binary" => Some(Self::Nonbinary),
+            "prefer-not-to-say" => Some(Self::PreferNotToSay),
+            _ => None,
+        }
+    }
+    
+}
+
+impl std::fmt::Display for UserGender {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UserGender::Male => write!(f,"male"),
+            UserGender::Female => write!(f,"female"),
+            UserGender::Nonbinary => write!(f,"non-binary"),
+            UserGender::PreferNotToSay => write!(f,"prefer-not-to-say"),
+        }
+    }
+}
+
 #[derive(Debug,Clone,PartialEq,Eq)]
 pub enum UserStatus {
     Active,

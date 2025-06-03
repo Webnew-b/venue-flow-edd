@@ -5,3 +5,7 @@ edition = "2021"
 
 [dependencies]
 thiserror = "2.0.12"
+serde = { version = "1.0.210", features = ["derive"] }
+
+domain = {path = "../domain"}
+domain_core = {path = "../domain_core"}

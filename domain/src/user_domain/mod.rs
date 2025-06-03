@@ -7,8 +7,8 @@ pub mod user_dto;
 
 #[allow(async_fn_in_trait)]
 pub trait UserValidation {
-    async fn valid_email(&self,email:&str) -> bool;
-    async fn valid_username(&self,username:&str) -> bool;
+    async fn valid_email(&self,email:&str) -> Result<(),DomainError>;
+    async fn valid_username(&self,username:&str) -> Result<(),DomainError>;
 }
 
 
@@ -23,8 +23,8 @@ pub trait UserRepository {
     async fn save_user(self:&Self,user:User) ->
         Result<(),DomainError>;
 
-    async fn create_user(self:&Self,user:&User) ->
-        Result<i64,DomainError>;
+    async fn create_user(self:&Self,user:User) ->
+        Result<User,DomainError>;
 
     async fn delete_user(self:&Self,id:i64) ->
         Result<(),DomainError>;
