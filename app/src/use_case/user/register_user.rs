@@ -1,5 +1,6 @@
 use domain::user_domain::{UserRepository, UserValidation};
 use domain_core::user::{UserBuilder, UserGender};
+use garde::Validate;
 
 use crate::app_error::user_error::AppUserError;
 use crate::app_error::AppResult;
@@ -40,6 +41,10 @@ pub async fn register_user(
                     source: e 
                 }
             })?;
+
+    user.validate().map_err(|e|{
+        AppUserError::UserIllegal(e.to_string())
+    })?;
 
     let user = resp.create_user(user).await?;
 
