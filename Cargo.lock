@@ -397,6 +397,7 @@ version = "0.1.0"
 dependencies = [
  "domain",
  "domain_core",
+ "garde",
  "serde",
  "thiserror 2.0.12",
 ]

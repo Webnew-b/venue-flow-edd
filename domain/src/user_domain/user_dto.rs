@@ -8,4 +8,8 @@ pub struct UserLoginName {
     pub password:String,
 }
 
+pub struct UserLoginToken {
+    pub token:String
+}
+
 

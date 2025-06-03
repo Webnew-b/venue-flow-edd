@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 thiserror = "2.0.12"
 serde = { version = "1.0.210", features = ["derive"] }
+garde = { version = "0.22.0", features = ["full"] }
 
 domain = {path = "../domain"}
 domain_core = {path = "../domain_core"}

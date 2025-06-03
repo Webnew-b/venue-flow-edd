@@ -1,5 +1,47 @@
+use domain::user_domain::user_dto::{UserLoginEnum, UserLoginName};
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 
+
+
+
+#[derive(Validate,Clone)]
+pub struct Email{
+    #[garde(email)]
+    pub address:String
+}
+
+#[derive(Clone)]
+pub enum UserLoginType {
+    Email(Email),
+    UserName(String)
+}
+
+pub struct LoginUserCommand {
+    pub login_type:UserLoginType,
+    pub password:String
+}
+
+
+impl From<LoginUserCommand> for UserLoginName {
+    fn from(value: LoginUserCommand) -> Self {
+        let login_type = match value.login_type {
+            UserLoginType::Email(e) => UserLoginEnum::Email(e.address),
+            UserLoginType::UserName(u) => UserLoginEnum::UserName(u),
+        };
+        Self {
+            login_type,
+            password:value.password,
+        }
+    }
+}
+
+#[derive(Serialize,Deserialize,Clone)]
+pub struct LoginedRes {
+    pub id:i64,
+    pub username:String,
+    pub token:String
+}
 
 pub struct RegisterUserCommand {
     pub username:String,
@@ -10,17 +52,7 @@ pub struct RegisterUserCommand {
     pub introduce:Option<String>
 }
 
-pub enum UserLoginType {
-    Email(String),
-    UserName(String)
-}
-
-pub struct LoginUserCommand {
-    pub login_type:UserLoginType,
-    pub password:String
-}
-
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize,Deserialize,Clone)]
 pub struct RegisteredUserDto {
     pub id:i64,
     pub username:String,
