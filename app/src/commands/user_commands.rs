@@ -3,8 +3,6 @@ use garde::Validate;
 use serde::{Deserialize, Serialize};
 
 
-
-
 #[derive(Validate,Clone)]
 pub struct Email{
     #[garde(email)]
@@ -62,3 +60,23 @@ pub struct RegisteredUserDto {
     pub password:String,
 }
 
+
+pub struct UpdateUserCommand {
+    pub id:i64,
+    pub username:Option<String>,
+    pub email:Option<String>,
+    pub password:Option<String>,
+    pub avatar:Option<String>,
+    pub introduce:Option<String>,
+    pub gender:Option<String>,
+}
+
+#[derive(Serialize,Deserialize,Clone)]
+pub struct UserDetail{
+    pub id:i64,
+    pub username:String,
+    pub email:String,
+    pub avatar:String,
+    pub gender:String,
+    pub introduce:Option<String>,
+}

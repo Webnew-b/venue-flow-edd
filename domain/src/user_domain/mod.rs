@@ -40,4 +40,5 @@ pub trait UserRepository {
     async fn logout(self:&Self,token:String) ->
         Result<(),DomainError>;
 
+    
 }

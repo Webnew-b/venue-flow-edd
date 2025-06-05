@@ -9,7 +9,7 @@ use crate::commands::user_commands::{RegisterUserCommand, RegisteredUserDto};
 
 
 pub async fn register_user(
-    resp:&impl UserRepository,
+    repo:&impl UserRepository,
     validator:&impl UserValidation,
     data:RegisterUserCommand,
 ) -> AppResult<RegisteredUserDto> {
@@ -46,7 +46,7 @@ pub async fn register_user(
         AppUserError::UserIllegal(e.to_string())
     })?;
 
-    let user = resp.create_user(user).await?;
+    let user = repo.create_user(user).await?;
 
     let id = user.id().ok_or(AppUserError::UserIdInexisted)?;
 
