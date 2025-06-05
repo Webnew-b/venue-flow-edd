@@ -32,7 +32,6 @@ impl UserUpdate {
     pub fn new() -> Self {
         Self::default()
     }
-
     pub fn is_empty(&self) -> bool {
         self.username.is_none()
         && self.email.is_none()
@@ -42,7 +41,7 @@ impl UserUpdate {
         && self.gender.is_none()
     }
 
-    pub fn is_vaild_update_command(&self)
+    pub fn valid_update(&self)
         -> DomainCoreResult<()>
     {
         if self.is_empty() {

@@ -151,7 +151,7 @@ impl User {
         mut self,
         update:UserUpdate,
     ) -> DomainCoreResult<Self>  {
-        update.is_vaild_update_command()?;
+        update.valid_update()?;
        
         field_fill!(
             self,
