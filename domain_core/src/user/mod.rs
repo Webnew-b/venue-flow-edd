@@ -22,6 +22,7 @@ use garde::Validate;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
 use crate::user::user_update::UserUpdate;
+use crate::utils::Clock;
 
 pub mod lessor;
 pub mod organizer;
@@ -118,21 +119,21 @@ impl User {
     pub fn update_email(
         mut self,
         new_email:String,
-        updatetime:DateTime<Utc>
+        time:&impl Clock
     ) -> Self {
         self.email = new_email;
-        self.updatetime = updatetime;
+        self.updatetime = time.now();
         self
     }
 
-    pub fn ban_user(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn ban_user(mut self,time:&impl Clock) -> Self {
+        self.updatetime = time.now();
         self.status = UserStatus::Ban;
         self
     }
 
-    pub fn delete_user(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn delete_user(mut self,time:&impl Clock) -> Self {
+        self.updatetime = time.now();
         self.is_delete = true;
         self
     }
@@ -140,16 +141,17 @@ impl User {
     pub fn update_gender(
         mut self,
         gender:UserGender,
-        updatetime:DateTime<Utc>
+        time:impl Clock
     ) -> Self {
         self.gender = gender;
-        self.updatetime = updatetime;
+        self.updatetime = time.now();
         self
     }
 
     pub fn update_user(
         mut self,
         update:UserUpdate,
+        time:&impl Clock,
     ) -> DomainCoreResult<Self>  {
         update.valid_update()?;
        
@@ -163,7 +165,9 @@ impl User {
             password
         );
 
+
         self.introduce = update.introduce;
+        self.updatetime = time.now();
         Ok(self)
     }
 
@@ -237,5 +241,156 @@ impl UserBuilder {
 
         //todo Need to validate field is valid after build.
         Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain_core_error::DomainCoreError;
+    use crate::user::user_update::UserUpdate;
+    use crate::utils::Clock; // 确保 Clock trait 被导入
+    use chrono::{Duration, TimeZone, Utc};
+
+    // --- Test Helpers: MockClock and User Builder ---
+
+    /// A controllable clock for deterministic testing.
+    struct MockClock {
+        current_time: DateTime<Utc>,
+    }
+
+    impl MockClock {
+        fn new(start_time: DateTime<Utc>) -> Self {
+            Self { current_time: start_time }
+        }
+
+        /// Advances the mock clock's time by a specified duration.
+        fn advance(&mut self, duration: Duration) {
+            self.current_time += duration;
+        }
+    }
+
+    impl Clock for MockClock {
+        fn now(&self) -> DateTime<Utc> {
+            self.current_time
+        }
+    }
+    
+    /// A helper function to reduce boilerplate when creating a User for tests.
+    fn create_test_user_builder() -> UserBuilder {
+        let now = Utc.with_ymd_and_hms(2025, 6, 13, 12, 0, 0).unwrap();
+        UserBuilder::default()
+            .username("test_user".to_string())
+            .email("test@example.com".to_string())
+            .password("a_valid_password_longer_than_8".to_string())
+            .avatar("https://example.com/avatar.png".to_string())
+            .gender(UserGender::PreferNotToSay)
+            .createtime(now)
+            .updatetime(now)
+    }
+
+    // --- Builder and Creation Tests ---
+
+    #[test]
+    fn test_build_user_success() {
+        let builder = create_test_user_builder();
+        assert!(builder.build().is_ok());
+    }
+
+    #[test]
+    fn test_build_user_fail_missing_required_field() {
+        let mut builder = create_test_user_builder();
+        builder.username = None;
+        let result = builder.build();
+        assert!(matches!(result, Err(DomainCoreError::MissingField(field)) if field == "username"));
+    }
+
+    // --- Entity Method and Business Logic Tests ---
+
+    #[test]
+    fn test_can_login_logic() {
+        let clock = MockClock::new(Utc::now());
+        let user = create_test_user_builder().build().unwrap();
+        
+        // Active user can log in
+        assert!(user.can_login());
+
+        // Banned user cannot log in
+        let banned_user = user.clone().ban_user(&clock);
+        assert!(!banned_user.can_login());
+
+        // Deleted user cannot log in
+        let deleted_user = user.delete_user(&clock);
+        assert!(!deleted_user.can_login());
+    }
+
+    #[test]
+    fn test_ban_user_updates_status_and_time_deterministically() {
+        let start_time = Utc.with_ymd_and_hms(2025, 6, 13, 12, 0, 0).unwrap();
+        let mut clock = MockClock::new(start_time);
+        let user = create_test_user_builder().updatetime(clock.now()).build().unwrap();
+        
+        // Advance the clock to a new, known time
+        clock.advance(Duration::seconds(30));
+        
+        let banned_user = user.ban_user(&clock);
+
+        assert_eq!(banned_user.status(), &UserStatus::Ban);
+        assert_eq!(banned_user.updatetime(), clock.now()); // Assert against the new, controlled time
+        assert_ne!(banned_user.updatetime(), start_time);
+    }
+    
+    #[test]
+    fn test_delete_user_updates_flag_and_time_deterministically() {
+        let start_time = Utc.with_ymd_and_hms(2025, 6, 13, 12, 0, 0).unwrap();
+        let mut clock = MockClock::new(start_time);
+        let user = create_test_user_builder().updatetime(clock.now()).build().unwrap();
+
+        clock.advance(Duration::minutes(1));
+        
+        let deleted_user = user.delete_user(&clock);
+
+        assert!(deleted_user.is_delete());
+        assert_eq!(deleted_user.updatetime(), clock.now());
+    }
+
+    #[test]
+    fn test_update_user_success_and_updates_time() {
+        let start_time = Utc.with_ymd_and_hms(2025, 6, 13, 12, 0, 0).unwrap();
+        let mut clock = MockClock::new(start_time);
+        let user = create_test_user_builder().updatetime(clock.now()).build().unwrap();
+
+        let update_data = UserUpdate {
+            username: Some("new_username_is_long_enough".to_string()),
+            introduce: Some("new intro".to_string()),
+            ..Default::default()
+        };
+        
+        clock.advance(Duration::hours(1));
+        
+        let updated_user = user.update_user(update_data, &clock).unwrap();
+
+        assert_eq!(updated_user.username(), "new_username_is_long_enough");
+        assert_eq!(updated_user.introduce(), Some(&"new intro".to_string()));
+        assert_eq!(updated_user.updatetime(), clock.now());
+    }
+
+    #[test]
+    fn test_update_user_validation_failure_does_not_update() {
+        let start_time = Utc.with_ymd_and_hms(2025, 6, 13, 12, 0, 0).unwrap();
+        let clock = MockClock::new(start_time);
+        let user = create_test_user_builder().updatetime(clock.now()).build().unwrap();
+
+        // This update will fail validation because the username is too short.
+        let invalid_update_data = UserUpdate {
+            username: Some("shor".to_string()), 
+            ..Default::default()
+        };
+
+        let result = user.clone().update_user(invalid_update_data, &clock);
+
+        // Assert that the update failed
+        assert!(result.is_err());
     }
 }
