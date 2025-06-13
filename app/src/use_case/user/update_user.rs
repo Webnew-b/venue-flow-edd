@@ -5,6 +5,7 @@ use domain_core::user::UserGender;
 use crate::app_error::user_error::AppUserError;
 use crate::app_error::AppResult;
 use crate::commands::user_commands::UpdateUserCommand;
+use crate::{AppUseCase, Outcome};
 
 async fn get_update_struct(
     update:UpdateUserCommand,
@@ -31,6 +32,7 @@ async fn get_update_struct(
     }
 
     if let Some(e) = update.email{
+        //todo verify email and send event
         validator.valid_email(e.as_str()).await?;
         update_struct.email = Some(e);
     }
@@ -47,7 +49,7 @@ pub async fn update_user(
     repo:&impl UserRepository,
     validator:&impl UserValidation,
     update:UpdateUserCommand,
-    )-> AppResult<()> {
+    )-> AppResult<Outcome<()>> {
     let id = update.id;
     let update_struct = get_update_struct(update,validator).await?;
     let user = repo.find_user_by_id(id).await?;
@@ -55,5 +57,5 @@ pub async fn update_user(
         AppUserError::UpdateUserEntityFailed { message: e.to_string(), source:e }
     })?;
     repo.save_user(user).await?;
-    Ok(())
+    Ok(Outcome::new((),AppUseCase::BasicUserProfile))
 }

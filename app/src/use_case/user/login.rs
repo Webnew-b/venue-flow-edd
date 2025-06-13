@@ -6,6 +6,7 @@ use garde::Validate;
 use crate::app_error::user_error::AppUserError;
 use crate::app_error::{AppError, AppResult};
 use crate::commands::user_commands::{LoginUserCommand, LoginedRes, UserLoginType};
+use crate::{AppUseCase, Outcome};
 
 async fn valid_login_type(
     validator:&impl UserValidation,
@@ -30,7 +31,7 @@ pub async fn login_user(
     validator:&impl UserValidation,
     generator:&impl UserGenerator,
     info:LoginUserCommand,
-) -> AppResult<LoginedRes> {
+) -> AppResult<Outcome<LoginedRes>> {
     let login_type = info.login_type.clone();
 
     valid_login_type(validator, &login_type).await?;
@@ -52,9 +53,10 @@ pub async fn login_user(
     let token = generator.generate_token(&user)?.token;
 
     let id = user.id().ok_or(AppUserError::UserIdInexisted)?;
-    Ok(LoginedRes{
+    let res = LoginedRes{
         id,
         username:user.username().to_string(),
         token
-    })
+    };
+    Ok(Outcome::new(res, AppUseCase::UserLogin))
 }

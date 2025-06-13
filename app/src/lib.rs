@@ -27,7 +27,21 @@ pub enum AppUseCase {
 pub struct Outcome<T> {
     pub data:T,
     pub from_case:AppUseCase,
-    pub events:Vec<AppEventList>
+    pub events:AppEventList
+}
+
+impl<T> Outcome<T> {
+    pub fn new(data:T,from_case:AppUseCase) -> Self {
+        Self { data, from_case, events: AppEventList::new() }
+    }
+
+    pub fn new_with_events(
+        data:T,
+        from_case:AppUseCase,
+        events:AppEventList
+    ) -> Self {
+        Self { data, from_case, events }
+    }
 }
 
 // todo move all code to the "web" lib which about CustomResponse.

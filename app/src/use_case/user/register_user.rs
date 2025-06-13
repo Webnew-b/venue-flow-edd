@@ -5,6 +5,7 @@ use garde::Validate;
 use crate::app_error::user_error::AppUserError;
 use crate::app_error::AppResult;
 use crate::commands::user_commands::{RegisterUserCommand, RegisteredUserDto};
+use crate::{AppUseCase, Outcome};
 
 
 
@@ -12,7 +13,7 @@ pub async fn register_user(
     repo:&impl UserRepository,
     validator:&impl UserValidation,
     data:RegisterUserCommand,
-) -> AppResult<RegisteredUserDto> {
+) -> AppResult<Outcome<RegisteredUserDto>> {
 
     let builder = UserBuilder::default();
 
@@ -58,5 +59,6 @@ pub async fn register_user(
         gender:user.gender().to_string(),
         password:user.password().to_string()
     };
-    Ok(res)
+
+    Ok(Outcome::new(res,AppUseCase::BasicUserProfile))
 }
