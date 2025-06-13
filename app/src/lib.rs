@@ -1,9 +1,34 @@
 use serde::{Deserialize, Serialize};
 
+use crate::app_event::AppEventList;
+
 pub mod use_case;
 pub mod querys;
 pub mod commands;
 pub mod app_error;
+pub mod app_event;
+
+#[derive(Debug)]
+pub enum AppUseCase {
+    UserRegistrantion,
+    UserLogin,
+    BasicUserProfile,
+    CreateVenue,
+    ManageVenueStatus,
+    ViewMyVenues,
+    EditVenue,
+    ViewRentalRequests,
+    ProcessRentalRequests,
+
+    GetData(String),
+}
+
+#[derive(Debug)]
+pub struct Outcome<T> {
+    pub data:T,
+    pub from_case:AppUseCase,
+    pub events:Vec<AppEventList>
+}
 
 // todo move all code to the "web" lib which about CustomResponse.
 #[derive(Serialize)]
