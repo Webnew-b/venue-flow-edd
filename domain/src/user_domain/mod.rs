@@ -1,3 +1,5 @@
+use domain_core::user::lessor::Lessor;
+use domain_core::user::organizer::Organizer;
 use domain_core::user::User;
 
 use crate::domain_error::DomainError;
@@ -40,5 +42,15 @@ pub trait UserRepository {
     async fn logout(self:&Self,token:String) ->
         Result<(),DomainError>;
 
-    
+    async fn find_user_has_organizer_role(&self,user_id:i64) 
+        -> Result<Option<Organizer>,DomainError>;
+
+    async fn find_user_has_lessor_role(&self,user_id:i64) 
+        -> Result<Option<Lessor>,DomainError>;
+
+    async fn find_organizer_by_user_id(&self,user_id:i64) 
+        -> Result<Organizer,DomainError>;
+
+    async fn find_lessor_by_user_id(&self,user_id:i64) 
+        -> Result<Lessor,DomainError>;
 }

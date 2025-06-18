@@ -1,6 +1,7 @@
 use domain::user_domain::{ UserRepository, UserValidation};
 use domain_core::user::user_update::UserUpdate;
 use domain_core::user::UserGender;
+use domain_core::utils::Clock;
 
 use crate::app_error::user_error::AppUserError;
 use crate::app_error::AppResult;
@@ -49,11 +50,12 @@ pub async fn update_user(
     repo:&impl UserRepository,
     validator:&impl UserValidation,
     update:UpdateUserCommand,
+    clock:&impl Clock,
     )-> AppResult<Outcome<()>> {
     let id = update.id;
     let update_struct = get_update_struct(update,validator).await?;
     let user = repo.find_user_by_id(id).await?;
-    let user = user.update_user(update_struct).map_err(|e|{
+    let user = user.update_user(update_struct,clock).map_err(|e|{
         AppUserError::UpdateUserEntityFailed { message: e.to_string(), source:e }
     })?;
     repo.save_user(user).await?;

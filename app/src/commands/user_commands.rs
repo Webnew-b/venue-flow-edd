@@ -79,4 +79,23 @@ pub struct UserDetail{
     pub avatar:String,
     pub gender:String,
     pub introduce:Option<String>,
+    pub is_lessor:bool,
+    pub is_organizer:bool,
+}
+
+#[derive(Serialize,Deserialize,Clone)]
+pub struct LessorDetail{
+    pub id:i64,
+    pub username:String,
+    pub email:String,
+    pub phone:String,
+    pub venues:Vec<String>,
+}
+
+#[derive(Serialize,Deserialize,Clone)]
+pub struct OrganizerDetail{
+    pub id:i64,
+    pub username:String,
+    pub email:String,
+    pub phone:String,
 }

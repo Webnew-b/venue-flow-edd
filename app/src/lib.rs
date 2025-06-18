@@ -8,7 +8,7 @@ pub mod commands;
 pub mod app_error;
 pub mod app_event;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub enum AppUseCase {
     UserRegistrantion,
     UserLogin,
@@ -23,7 +23,7 @@ pub enum AppUseCase {
     GetData(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Outcome<T> {
     pub data:T,
     pub from_case:AppUseCase,
