@@ -1,7 +1,31 @@
-deny = [
-    "clippy::restriction",
+# 最大认知复杂度（默认 25，适当降低有助于代码可维护性）
+cognitive-complexity-threshold = 20
+
+# 函数参数数量（默认 7，推荐限制在 5 以内，鼓励封装）
+too-many-arguments-threshold = 5
+
+# 类型复杂度（默认 250，适当降低鼓励更简洁的类型）
+type-complexity-threshold = 200
+
+# 枚举变体大小差异（帮助你避免不平衡 enum 导致的空间浪费）
+enum-variant-size-threshold = 200
+
+# 建议复制 vs 引用的大小阈值（默认 256，大对象建议引用）
+trivial-copy-size-limit = 128
+
+# 栈分配阈值（帮助发现可能引发栈溢出的局部变量）
+stack-size-threshold = 1024
+
+# 禁用这些不推荐方法（也可根据需要扩展）
+disallowed-methods = [
+  "std::option::Option::unwrap",
+  "std::result::Result::unwrap",
+  "std::result::Result::expect",
 ]
 
-allow = [
-    "clippy::self_named_module_files", # <-- 添加这一行
-]
+# 禁用不良命名（防止 foo/bar/baz 这样的占位名污染生产代码）
+disallowed-names = ["foo", "bar", "baz", "qux"]
+
+# 如果需要 MSRV（最小支持 Rust 版本），可指定（如 1.70）
+# msrv = "1.70"
+
