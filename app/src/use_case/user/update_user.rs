@@ -4,7 +4,7 @@ use domain_core::user::UserGender;
 use domain_core::utils::Clock;
 
 use crate::app_error::user_error::AppUserError;
-use crate::app_error::AppResult;
+use crate::app_error::{AppError, AppResult};
 use crate::commands::user_commands::UpdateUserCommand;
 use crate::{AppUseCase, Outcome};
 
@@ -41,7 +41,11 @@ async fn get_update_struct(
     update_struct.introduce = update.introduce;
 
     update_struct.valid_update().map_err(|e|{
-        AppUserError::UpdateUserEntityFailed { message: e.to_string(), source:e }
+        AppError::UpdateEntityFailed {
+            entity_type:"user".to_string(),
+            message: e.to_string(), 
+            source:e
+        }
     })?;
     Ok(update_struct)
 }
@@ -56,7 +60,11 @@ pub async fn update_user(
     let update_struct = get_update_struct(update,validator).await?;
     let user = repo.find_user_by_id(id).await?;
     let user = user.update_user(update_struct,clock).map_err(|e|{
-        AppUserError::UpdateUserEntityFailed { message: e.to_string(), source:e }
+        AppError::UpdateEntityFailed {
+            entity_type:"user".to_string(),
+            message: e.to_string(), 
+            source:e
+        }
     })?;
     repo.save_user(user).await?;
     Ok(Outcome::new((),AppUseCase::BasicUserProfile))

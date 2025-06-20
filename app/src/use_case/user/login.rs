@@ -52,7 +52,7 @@ pub async fn login_user(
 
     let token = generator.generate_token(&user)?.token;
 
-    let id = user.id().ok_or(AppUserError::UserIdInexisted)?;
+    let id = user.id().ok_or(AppError::IdInexisted("user".to_string()))?;
     let res = LoginedRes{
         id,
         username:user.username().to_string(),

@@ -3,7 +3,7 @@ use domain_core::user::{UserBuilder, UserGender};
 use garde::Validate;
 
 use crate::app_error::user_error::AppUserError;
-use crate::app_error::AppResult;
+use crate::app_error::{AppError, AppResult};
 use crate::commands::user_commands::{RegisterUserCommand, RegisteredUserDto};
 use crate::{AppUseCase, Outcome};
 
@@ -37,7 +37,8 @@ pub async fn register_user(
     let user = builder.avatar(avatar)
             .build()
             .map_err(|e|{
-                AppUserError::CreateUserEntityFailed { 
+                AppError::CreateEntityFailed { 
+                    entity_type:"user".to_string(),
                     message: e.to_string(), 
                     source: e 
                 }
@@ -49,7 +50,7 @@ pub async fn register_user(
 
     let user = repo.create_user(user).await?;
 
-    let id = user.id().ok_or(AppUserError::UserIdInexisted)?;
+    let id = user.id().ok_or(AppError::IdInexisted("user".to_string()))?;
 
     let res = RegisteredUserDto {
         id,

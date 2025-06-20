@@ -1,7 +1,6 @@
 use domain::user_domain::UserRepository;
 
-use crate::app_error::user_error::AppUserError;
-use crate::app_error::AppResult;
+use crate::app_error::{AppError, AppResult};
 use crate::commands::user_commands::LessorDetail;
 use crate::{AppUseCase, Outcome};
 
@@ -11,7 +10,7 @@ pub async fn get_lessor_detail(
     repo:&impl UserRepository,
 )->AppResult<Outcome<LessorDetail>> {
     let user = repo.find_lessor_by_user_id(id).await?;
-    let id = user.user().id().ok_or(AppUserError::UserIdInexisted)?;
+    let id = user.user().id().ok_or(AppError::IdInexisted("user".to_string()))?;
     let venues = vec!["aaa".to_string()];
 
     let res = LessorDetail{
