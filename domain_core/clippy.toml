@@ -1,0 +1,7 @@
+deny = [
+    "clippy::restriction",
+]
+
+allow = [
+    "clippy::self_named_module_files", # <-- 添加这一行
+]

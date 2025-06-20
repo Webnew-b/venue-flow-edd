@@ -21,6 +21,7 @@ use derive_builder::Builder;
 use garde::Validate;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
+use crate::utils::Clock;
 use crate::venue::venue_image::VenueImage;
 use crate::venue::venue_update::VenueUpdate;
 
@@ -90,20 +91,20 @@ pub struct Venue {
 
 
 impl Venue {
-    pub fn list_venue(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn list_venue(mut self,time:&impl Clock) -> Self {
+        self.updatetime = time.now();
         self.status = VenueStatus::Published;
         self
     }
 
-    pub fn unlist_venue(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn unlist_venue(mut self,time:&impl Clock) -> Self {
+        self.updatetime = time.now();
         self.status = VenueStatus::Unpublished;
         self
     }
 
-    pub fn delete_venue(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn delete_venue(mut self,time:&impl Clock) -> Self {
+        self.updatetime = time.now();
         self.is_delete = true;
         self
     }
