@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use domain_core::user::lessor::Lessor;
 use domain_core::user::organizer::Organizer;
 use domain_core::user::User;
@@ -7,7 +8,7 @@ use crate::user_domain::user_dto::{UserLoginName, UserLoginToken};
 
 pub mod user_dto;
 
-#[allow(async_fn_in_trait)]
+#[async_trait]
 pub trait UserValidation {
     async fn valid_email(&self,email:&str) -> Result<(),DomainError>;
     async fn valid_username(&self,username:&str) -> Result<(),DomainError>;
@@ -19,7 +20,7 @@ pub trait UserGenerator {
 }
 
 
-#[allow(async_fn_in_trait)]
+#[async_trait]
 pub trait UserRepository {
     async fn find_user_by_id(&self,id:i64) ->
         Result<User,DomainError>;

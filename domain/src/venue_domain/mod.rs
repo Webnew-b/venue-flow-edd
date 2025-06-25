@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use domain_core::venue::venue_update::VenueUpdate;
 use domain_core::venue::Venue;
 
@@ -9,7 +10,7 @@ use crate::PageLimit;
 pub mod venue_dto;
 
 
-#[allow(async_fn_in_trait)]
+#[async_trait]
 pub trait VenueRepository {
 
     async fn find_venue_by_id(&self,id:i64) 
