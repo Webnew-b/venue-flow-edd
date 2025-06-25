@@ -5,8 +5,6 @@ use thiserror::Error;
 pub enum AppUserError {
     #[error("Invalid gender,gender accept:male,female,not-binary,prefer-not-to-say")]
     InvalidGender,
-    #[error("The user is illegal,cause:{0}")]
-    UserIllegal(String),
     #[error("The email is illegal.")]
     EmailIllegal,
 

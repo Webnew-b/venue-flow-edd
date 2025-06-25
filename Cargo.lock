@@ -1411,6 +1411,7 @@ name = "domain"
 version = "0.1.0"
 dependencies = [
  "domain_core",
+ "serde",
  "thiserror 2.0.12",
 ]
 

@@ -1,0 +1,35 @@
+use domain_core::venue::venue_update::VenueUpdate;
+use domain_core::venue::Venue;
+
+use crate::domain_error::DomainError;
+use crate::venue_domain::venue_dto::IndexVenue;
+use crate::PageLimit;
+
+
+pub mod venue_dto;
+
+
+#[allow(async_fn_in_trait)]
+pub trait VenueRepository {
+
+    async fn find_venue_by_id(&self,id:i64) 
+        -> Result<Venue,DomainError>;
+
+    async fn find_venue_by_lessor_id(&self,id:i64,page:PageLimit) 
+        -> Result<Vec<Venue>,DomainError>;
+
+    async fn find_venue_by_name(&self,name:String,page:PageLimit) 
+        -> Result<Vec<Venue>,DomainError>;
+
+    async fn modify_venue(&self,update:VenueUpdate)
+        -> Result<(),DomainError>;
+
+    async fn create_venue(&self,v:Venue)
+        -> Result<Venue,DomainError>;
+
+    async fn save_venue(&self,v:Venue)
+        -> Result<(),DomainError>;
+
+    async fn get_venues_for_index(&self,page:PageLimit)
+        -> Result<Vec<IndexVenue>,DomainError>;
+}

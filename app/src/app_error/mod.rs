@@ -17,6 +17,11 @@ pub enum AppError {
     #[error(transparent)]
     AppUserError(#[from] AppUserError),
 
+    #[error("The {entity_type} is illegal,cause:{cause}")]
+    EntityInvalid{
+        entity_type:String,
+        cause:String
+    },
     #[error("The {0} id should be existed.")]
     IdInexisted(String),
     #[error("Could not create {entity_type} entity,cause:{message}")]

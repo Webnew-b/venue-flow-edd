@@ -112,6 +112,7 @@ impl Venue {
     pub fn update_venue(
         mut self,
         update:VenueUpdate,
+        time:&impl Clock
     ) -> DomainCoreResult<Self>  {
         update.is_vaild_update_command()?;
        
@@ -124,7 +125,7 @@ impl Venue {
         );
 
         self.description = update.description;
-
+        self.updatetime = time.now();
         Ok(self)
     }
 

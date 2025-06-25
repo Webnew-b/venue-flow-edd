@@ -53,4 +53,7 @@ pub trait UserRepository {
 
     async fn find_lessor_by_user_id(&self,user_id:i64) 
         -> Result<Lessor,DomainError>;
+
+    async fn find_lessor_by_id(&self,id:i64)
+        -> Result<Lessor,DomainError>;
 }

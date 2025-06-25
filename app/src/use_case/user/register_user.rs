@@ -1,5 +1,6 @@
 use domain::user_domain::{UserRepository, UserValidation};
 use domain_core::user::{UserBuilder, UserGender};
+use domain_core::utils::Clock;
 use garde::Validate;
 
 use crate::app_error::user_error::AppUserError;
@@ -12,6 +13,7 @@ use crate::{AppUseCase, Outcome};
 pub async fn register_user(
     repo:&impl UserRepository,
     validator:&impl UserValidation,
+    time:&impl Clock,
     data:RegisterUserCommand,
 ) -> AppResult<Outcome<RegisteredUserDto>> {
 
@@ -35,6 +37,8 @@ pub async fn register_user(
     //todo Upload the user avatar to the oss
     let avatar = data.avatar;
     let user = builder.avatar(avatar)
+            .updatetime(time.now())
+            .createtime(time.now())
             .build()
             .map_err(|e|{
                 AppError::CreateEntityFailed { 
@@ -45,7 +49,10 @@ pub async fn register_user(
             })?;
 
     user.validate().map_err(|e|{
-        AppUserError::UserIllegal(e.to_string())
+        AppError::EntityInvalid { 
+            entity_type: "user".to_string(),
+            cause: e.to_string()
+        }
     })?;
 
     let user = repo.create_user(user).await?;
