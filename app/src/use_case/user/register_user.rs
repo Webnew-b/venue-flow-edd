@@ -1,4 +1,5 @@
 use domain::user_domain::{UserRepository, UserValidation};
+use domain::util_trait::ImageRepository;
 use domain_core::user::{UserBuilder, UserGender};
 use domain_core::utils::Clock;
 use garde::Validate;
@@ -10,11 +11,12 @@ use crate::{AppUseCase, Outcome};
 
 
 
-pub async fn register_user(
+pub async fn register_user<'image>(
     repo:&impl UserRepository,
+    image_repo:&impl ImageRepository,
     validator:&impl UserValidation,
     time:&impl Clock,
-    data:RegisterUserCommand,
+    data:RegisterUserCommand<'image>,
 ) -> AppResult<Outcome<RegisteredUserDto>> {
 
     let builder = UserBuilder::default();
@@ -35,7 +37,7 @@ pub async fn register_user(
     let builder = builder.gender(gender);
 
     //todo Upload the user avatar to the oss
-    let avatar = data.avatar;
+    let avatar = image_repo.upload_image(data.avatar).await?;
     let user = builder.avatar(avatar)
             .updatetime(time.now())
             .createtime(time.now())

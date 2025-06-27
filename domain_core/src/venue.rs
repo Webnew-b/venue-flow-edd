@@ -129,6 +129,16 @@ impl Venue {
         Ok(self)
     }
 
+    pub fn update_images(
+        mut self,
+        images:Vec<VenueImage>,
+        time:&impl Clock
+    ) -> Self{
+        self.images = images;
+        self.updatetime = time.now();
+        self
+    }
+
     
 }
 

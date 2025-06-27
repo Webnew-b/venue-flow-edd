@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use domain::user_domain::user_dto::{UserLoginEnum, UserLoginName};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
@@ -41,10 +43,10 @@ pub struct LoginedRes {
     pub token:String
 }
 
-pub struct RegisterUserCommand {
+pub struct RegisterUserCommand<'image> {
     pub username:String,
     pub email:String,
-    pub avatar:String,
+    pub avatar:&'image Path,
     pub gender:String,
     pub password:String,
     pub introduce:Option<String>
@@ -61,12 +63,12 @@ pub struct RegisteredUserDto {
 }
 
 
-pub struct UpdateUserCommand {
+pub struct UpdateUserCommand<'image_path> {
     pub id:i64,
     pub username:Option<String>,
     pub email:Option<String>,
     pub password:Option<String>,
-    pub avatar:Option<String>,
+    pub avatar:Option<&'image_path Path>,
     pub introduce:Option<String>,
     pub gender:Option<String>,
 }

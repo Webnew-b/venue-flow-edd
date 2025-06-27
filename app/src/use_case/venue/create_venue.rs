@@ -1,27 +1,43 @@
 use domain::user_domain::UserRepository;
+use domain::util_trait::ImageRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::utils::Clock;
+use domain_core::venue::venue_image::VenueImage;
 use domain_core::venue::VenueBuilder;
 use garde::Validate;
 
 use crate::app_error::{AppError, AppResult};
-use crate::commands::venue_commands::{CreateVenueRes, VenueImageRes};
+use crate::commands::venue_commands::{CreateVenueCommand, CreateVenueRes, VenueImageRes};
 use crate::{AppUseCase, Outcome};
 
-pub async fn create_venue(
+pub async fn create_venue<'image>(
     user_repo:&impl UserRepository,
     veune_repo:&impl VenueRepository,
-    venue_create:CreateVenueRes,
+    image_repo:&impl ImageRepository,
+    venue_create:CreateVenueCommand<'image>,
     time:&impl Clock,
 ) -> AppResult<Outcome<CreateVenueRes>>{
     let lessor = user_repo
-        .find_lessor_by_user_id(venue_create.id)
+        .find_lessor_by_user_id(venue_create.user_id)
         .await?;
 
     let lessor_id = lessor.id()
         .ok_or(AppError::IdInexisted("veune".to_string()))?;
 
+    let mut images = vec![]; 
+
+    for item in venue_create.images  {
+        let uri = image_repo.upload_image(item.image).await?;
+        images.push(VenueImage{
+            title:item.title,
+            uri,
+            comment:item.comment,
+        });
+    };
+
+
     let bulider = VenueBuilder::default()
+        .images(images)
         .name(venue_create.name)
         .lessor_id(lessor_id)
         .address(venue_create.address)

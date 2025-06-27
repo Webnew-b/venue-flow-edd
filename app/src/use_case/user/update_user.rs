@@ -1,4 +1,5 @@
 use domain::user_domain::{ UserRepository, UserValidation};
+use domain::util_trait::ImageRepository;
 use domain_core::user::user_update::UserUpdate;
 use domain_core::user::UserGender;
 use domain_core::utils::Clock;
@@ -8,9 +9,10 @@ use crate::app_error::{AppError, AppResult};
 use crate::commands::user_commands::UpdateUserCommand;
 use crate::{AppUseCase, Outcome};
 
-async fn get_update_struct(
-    update:UpdateUserCommand,
+async fn get_update_struct<'image>(
+    update:UpdateUserCommand<'image>,
     validator:&impl UserValidation,
+    image_repo:&impl ImageRepository,
     )
     -> AppResult<UserUpdate> {
     
@@ -23,8 +25,8 @@ async fn get_update_struct(
     };
 
     if let Some(a) = update.avatar {
-        //todo update file to the oss
-        update_struct.avatar = Some(a);
+        let image = image_repo.upload_image(a).await?;
+        update_struct.avatar = Some(image);
     }
 
     if let Some(u) = update.username{
@@ -50,14 +52,15 @@ async fn get_update_struct(
     Ok(update_struct)
 }
 
-pub async fn update_user(
+pub async fn update_user<'image>(
     repo:&impl UserRepository,
     validator:&impl UserValidation,
-    update:UpdateUserCommand,
+    update:UpdateUserCommand<'image>,
+    image_repo:&impl ImageRepository,
     clock:&impl Clock,
     )-> AppResult<Outcome<()>> {
     let id = update.id;
-    let update_struct = get_update_struct(update,validator).await?;
+    let update_struct = get_update_struct(update,validator,image_repo).await?;
     let user = repo.find_user_by_id(id).await?;
     let user = user.update_user(update_struct,clock).map_err(|e|{
         AppError::UpdateEntityFailed {

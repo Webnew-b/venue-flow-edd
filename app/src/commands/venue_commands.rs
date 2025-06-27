@@ -1,16 +1,23 @@
+use std::path::Path;
+
 use domain_core::venue::venue_image::VenueImage;
 use domain_core::venue::VenueStatus;
 use serde::{Deserialize, Serialize};
 
 
-pub struct CreateVenueCommand {
+pub struct CreateVenueCommand<'image> {
     pub user_id:i64,
     pub name:String,
     pub address:String,
-    //todo upload image type
-    pub images:Vec<String>,
+    pub images:Vec<VenueImageCommand<'image>>,
     pub capacity:i32,
     pub description:Option<String>,
+}
+
+pub struct VenueImageCommand<'image>{
+    pub title:String,
+    pub image:&'image Path,
+    pub comment:Option<String>,
 }
 
 #[derive(Serialize,Deserialize,Clone)]
@@ -61,12 +68,11 @@ pub struct ManageVenueRes {
 }
 
 
-pub struct UpdateVenueCommand {
+pub struct UpdateVenueCommand<'image> {
     pub id:i64, 
     pub name:Option<String>,
     pub address:Option<String>,
-    //todo upload image type
-    pub images:Vec<String>,
+    pub images:Vec<VenueImageCommand<'image>>,
     pub capacity:Option<i32>,
     pub description:Option<String>,
 }
