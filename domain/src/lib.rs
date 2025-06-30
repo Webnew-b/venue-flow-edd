@@ -4,6 +4,7 @@ pub mod user_domain;
 pub mod domain_error;
 pub mod venue_domain;
 pub mod util_trait;
+pub mod rental_domain;
 
 #[derive(Deserialize,Serialize)]
 pub struct PageLimit {

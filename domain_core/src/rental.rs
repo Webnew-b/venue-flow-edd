@@ -20,10 +20,11 @@ macro_rules! field_fill {
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 use garde::Validate;
+use util_macros::Get;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
 use crate::rental::rental_error::RentalError;
-use crate::rental::rental_update::RentalUpdate;
+use crate::utils::Clock;
 
 pub mod rental_error;
 pub mod rental_update;
@@ -34,9 +35,10 @@ pub enum RentalStatus {
     Accepted, 
     Rejected, 
     Finished, 
+    Canceled,
 }
 
-#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate)]
+#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate,Get)]
 #[builder(
     pattern = "owned",
     build_fn(
@@ -77,37 +79,62 @@ pub struct Rental {
     #[garde(skip)]
     createtime:DateTime<Utc>,
     #[garde(skip)]
-    updatetime:DateTime<Utc>,
+    updatetime:DateTime<Utc>
 }
 
 impl Rental {
-    pub fn accepet_rental(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn accepet_rental(mut self,time:&impl Clock) 
+        -> DomainCoreResult<Self> {
+        if self.status != RentalStatus::Pending {
+            return Err(RentalError::RentalMustBePending.into());
+        }
+        self.updatetime = time.now();
         self.status = RentalStatus::Accepted;
-        self
+        Ok(self)
     }
 
-    pub fn reject_rental(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn cancel_rental(mut self,organizer_id:i64,time:&impl Clock) 
+        -> DomainCoreResult<Self> {
+        if self.status != RentalStatus::Pending {
+            return Err(RentalError::RentalMustBePending.into());
+        }
+        if self.organizer_id != organizer_id {
+            return Err(RentalError::RentalNotOwnedOrganizer(organizer_id).into());
+        }
+        self.updatetime = time.now();
+        self.status = RentalStatus::Canceled;
+        Ok(self)
+    }
+
+    pub fn reject_rental(mut self,time:&impl Clock)
+        -> DomainCoreResult<Self> {
+        if self.status != RentalStatus::Pending {
+            return Err(RentalError::RentalMustBePending.into());
+        }
+        self.updatetime = time.now();
         self.status = RentalStatus::Rejected;
-        self
+        Ok(self)
     }
 
-    pub fn finish_request(mut self,updatetime:DateTime<Utc>) -> Self {
-        self.updatetime = updatetime;
+    pub fn finish_request(mut self,time:&impl Clock) -> Self {
+        self.updatetime = time.now();
         self.status = RentalStatus::Finished;
         self
     }
 
     pub fn set_rental_date(
         mut self,
-        updatetime:DateTime<Utc>,
-        now:DateTime<Utc>,
+        time:&impl Clock,
         start_time:DateTime<Utc>,
         end_time:DateTime<Utc>,
+        organizer_id:i64
         ) -> DomainCoreResult<Self> {
 
-        if start_time < now {
+        if self.organizer_id != organizer_id {
+            return Err(RentalError::RentalNotOwnedOrganizer(organizer_id).into());
+        }
+
+        if start_time < time.now() {
             return Err(RentalError::RentalStartTimeMustBeFuture.into());
         }
 
@@ -119,28 +146,11 @@ impl Rental {
 
         self.start_time = start_time;
         self.end_time = end_time;
-        self.updatetime = updatetime;
+        self.updatetime = time.now();
         Ok(self)
     }
 
-    pub fn update_venue(
-        mut self,
-        update:RentalUpdate,
-    ) -> DomainCoreResult<Self>  {
-        update.is_vaild_update_command()?;
-       
-        field_fill!(
-            self,
-            update,
-            activity_type
-        );
 
-        self.request_comments = update.request_comments;
-
-        Ok(self)
-    }
-
-    
 }
 
 

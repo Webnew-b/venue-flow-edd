@@ -1,10 +1,13 @@
 use domain::domain_error::DomainError;
 use thiserror::Error;
 
+use crate::app_error::rental_error::AppRentalError;
 use crate::app_error::user_error::AppUserError;
+use crate::app_error::venue_error::AppVenueError;
 
 pub mod user_error;
 pub mod venue_error;
+pub mod rental_error;
 
 pub type AppResult<T> = std::result::Result<T,AppError>;
 
@@ -16,6 +19,12 @@ pub enum AppError {
 
     #[error(transparent)]
     AppUserError(#[from] AppUserError),
+
+    #[error(transparent)]
+    AppRentalError(#[from] AppRentalError),
+
+    #[error(transparent)]
+    AppVenueError(#[from] AppVenueError),
 
     #[error("The {entity_type} is illegal,cause:{cause}")]
     EntityInvalid{

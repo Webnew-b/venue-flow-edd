@@ -395,6 +395,7 @@ dependencies = [
 name = "app"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "domain",
  "domain_core",
  "garde",
@@ -1424,6 +1425,7 @@ dependencies = [
  "derive_builder",
  "garde",
  "thiserror 2.0.12",
+ "util_macros",
 ]
 
 [[package]]

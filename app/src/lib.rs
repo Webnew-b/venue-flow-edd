@@ -13,12 +13,18 @@ pub enum AppUseCase {
     UserRegistrantion,
     UserLogin,
     BasicUserProfile,
+    
     CreateVenue,
     ManageVenueStatus,
     ViewMyVenues,
     EditVenue,
+    
+    CreateRentalRequest,
     ViewRentalRequests,
     ProcessRentalRequests,
+    CancelRentalRequest,
+    UpdateRentalTime,
+    
 
     GetData(String),
 }

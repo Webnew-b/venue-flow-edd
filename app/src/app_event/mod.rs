@@ -38,4 +38,25 @@ impl AppEventList {
 #[derive(Debug,Clone,PartialEq,Eq)]
 pub enum AppEvent {
     LogUseCase,
+
+    CanceledRentalRequest {
+        organizer_email:String,
+        organizer_name:String,
+        organizer_id:i64,
+        lessor_id:i64,
+        lessor_name:String,
+        lessor_email:String,
+    },
+
+    ApprovedRentalRequest {
+        organizer_email:String,
+        organizer_name:String,
+        organizer_id:i64,
+    },
+
+    RejectedRentalRequest {
+        organizer_email:String,
+        organizer_name:String,
+        organizer_id:i64,
+    },
 }

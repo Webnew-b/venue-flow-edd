@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 thiserror = "2.0.12"
+chrono = "0.4.41"
 serde = { version = "1.0.210", features = ["derive"] }
 garde = { version = "0.22.0", features = ["full"] }
 

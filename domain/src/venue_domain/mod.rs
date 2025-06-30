@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use domain_core::user::lessor::Lessor;
 use domain_core::venue::venue_update::VenueUpdate;
 use domain_core::venue::Venue;
 
@@ -33,4 +34,10 @@ pub trait VenueRepository {
 
     async fn get_venues_for_index(&self,page:PageLimit)
         -> Result<Vec<IndexVenue>,DomainError>;
+
+    async fn is_venue_owned_by_lessor(&self,lessor_id:i64,venue_id:i64)
+        -> Result<bool,DomainError>;
+
+    async fn find_lessor_by_venue_id(&self,venue_id:i64)
+        -> Result<Lessor,DomainError>;
 }
