@@ -48,7 +48,7 @@ pub fn custom_sturct_get(input:TokenStream) -> TokenStream {
                         .named
                         .iter()
                         .map(|i| &i.ty);
-                    
+
                     quote! {
                         #(
                             pub fn #field_names(&self) -> &#field_types {

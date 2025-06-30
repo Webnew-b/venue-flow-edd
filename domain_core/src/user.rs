@@ -19,6 +19,7 @@ macro_rules! field_fill {
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 use garde::Validate;
+use util_macros::Get;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
 use crate::user::user_update::UserUpdate;
@@ -67,7 +68,7 @@ pub enum UserStatus {
     Ban,
 }
 
-#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate)]
+#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate,Get)]
 #[builder(
     pattern = "owned",
     build_fn(
@@ -179,54 +180,6 @@ impl User {
     pub fn can_login(&self) -> bool {
         !self.is_delete &&
         self.status == UserStatus::Active
-    }
-
-    pub fn password(&self) -> &str {
-        &self.password
-    }
-
-    pub fn id(&self) -> Option<i64> {
-        self.id
-    }
-
-    pub fn username(&self) -> &str {
-        &self.username
-    }
-
-    pub fn email(&self) -> &str {
-        &self.email
-    }
-
-    pub fn avatar(&self) -> &str {
-        &self.avatar
-    }
-
-    pub fn gender(&self) -> &UserGender {
-        &self.gender
-    }
-
-    pub fn introduce(&self) -> Option<&String> {
-        self.introduce.as_ref()
-    }
-
-    pub fn is_show(&self) -> bool {
-        self.is_show
-    }
-
-    pub fn is_delete(&self) -> bool {
-        self.is_delete
-    }
-
-    pub fn status(&self) -> &UserStatus {
-        &self.status
-    }
-
-    pub fn createtime(&self) -> DateTime<Utc> {
-        self.createtime
-    }
-
-    pub fn updatetime(&self) -> DateTime<Utc> {
-        self.updatetime
     }
 }
 

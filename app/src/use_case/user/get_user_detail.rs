@@ -18,7 +18,7 @@ pub async fn get_user_detail(
         username:user.username().to_string(),
         email:user.email().to_string(),
         avatar:user.avatar().to_string(),
-        introduce:user.introduce().cloned(),
+        introduce:user.introduce().clone(),
         gender:user.gender().to_string(),
         is_organizer,
         is_lessor
