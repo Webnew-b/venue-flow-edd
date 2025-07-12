@@ -290,8 +290,8 @@ mod tests {
         let banned_user = user.ban_user(&clock);
 
         assert_eq!(banned_user.status(), &UserStatus::Ban);
-        assert_eq!(banned_user.updatetime(), clock.now()); // Assert against the new, controlled time
-        assert_ne!(banned_user.updatetime(), start_time);
+        assert_eq!(banned_user.updatetime(), &clock.now()); // Assert against the new, controlled time
+        assert_ne!(banned_user.updatetime(), &start_time);
     }
     
     #[test]
@@ -305,7 +305,7 @@ mod tests {
         let deleted_user = user.delete_user(&clock);
 
         assert!(deleted_user.is_delete());
-        assert_eq!(deleted_user.updatetime(), clock.now());
+        assert_eq!(deleted_user.updatetime(), &clock.now());
     }
 
     #[test]
@@ -325,8 +325,8 @@ mod tests {
         let updated_user = user.update_user(update_data, &clock).unwrap();
 
         assert_eq!(updated_user.username(), "new_username_is_long_enough");
-        assert_eq!(updated_user.introduce(), Some(&"new intro".to_string()));
-        assert_eq!(updated_user.updatetime(), clock.now());
+        assert_eq!(updated_user.introduce(), &Some("new intro".to_string()));
+        assert_eq!(updated_user.updatetime(), &clock.now());
     }
 
     #[test]
