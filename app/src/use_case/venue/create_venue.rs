@@ -79,7 +79,7 @@ pub async fn create_venue<'image>(
         address:venue_res.address().to_string(),
         images:res_image,
         capacity:venue_res.capacity().clone(),
-        description:venue_res.description().cloned(),
+        description:venue_res.description().clone(),
     };
 
     Ok(Outcome::new(res, AppUseCase::CreateVenue))

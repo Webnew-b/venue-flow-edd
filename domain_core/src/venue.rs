@@ -19,6 +19,7 @@ macro_rules! field_fill {
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
 use garde::Validate;
+use util_macros::Get;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
 use crate::utils::Clock;
@@ -36,7 +37,7 @@ pub enum VenueStatus {
     Unpublished,
 }
 
-#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate)]
+#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate,Get)]
 #[builder(
     pattern = "owned",
     build_fn(
@@ -140,56 +141,6 @@ impl Venue {
     }
 
     
-}
-
-impl Venue {
-    pub fn id(&self) -> Option<i64> {
-        self.id
-    }
-
-    pub fn lessor_id(&self) -> i64 {
-        self.lessor_id
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn address(&self) -> &str {
-        &self.address
-    }
-
-    pub fn images(&self) -> &[VenueImage] {
-        &self.images
-    }
-
-    pub fn capacity(&self) -> i32 {
-        self.capacity
-    }
-
-    pub fn description(&self) -> Option<&String> {
-        self.description.as_ref()
-    }
-
-    pub fn is_show(&self) -> bool {
-        self.is_show
-    }
-
-    pub fn is_delete(&self) -> bool {
-        self.is_delete
-    }
-
-    pub fn status(&self) -> &VenueStatus {
-        &self.status
-    }
-
-    pub fn createtime(&self) -> DateTime<Utc> { 
-        self.createtime
-    }
-
-    pub fn updatetime(&self) -> DateTime<Utc> {
-        self.updatetime
-    }
 }
 
 impl VenueBuilder {

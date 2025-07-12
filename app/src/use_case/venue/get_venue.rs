@@ -13,8 +13,8 @@ pub async fn get_venue(
     ) 
     -> AppResult<Outcome<GetVenueRes>> {
     let veune = venue_repo.find_venue_by_id(id).await?;
-    let lessor_id = veune.lessor_id();
-    let lessor = user_repo.find_lessor_by_id(lessor_id).await?;
+    let lessor_id = veune.lessor_id().clone();
+    let lessor = user_repo.find_lessor_by_id(lessor_id.clone()).await?;
 
     let id = veune.id().ok_or(AppError::IdInexisted("veune".to_string()))?;
 
@@ -30,8 +30,8 @@ pub async fn get_venue(
         name:veune.name().to_string(),
         address:veune.address().to_string(),
         images,
-        capacity:veune.capacity(),
-        description:veune.description().cloned(),
+        capacity:veune.capacity().clone(),
+        description:veune.description().clone(),
         lessor_id,
         lessor_name:lessor.user().username().to_string(),
         lessor_phone:lessor.phone().to_string(),

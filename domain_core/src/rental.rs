@@ -7,15 +7,6 @@ macro_rules! require_field {
     };
 }
 
-macro_rules! field_fill {
-    ($target:expr,$source:expr,$($field:ident),+) => {
-        $(
-            if let Some(item) = $source.$field {
-                $target.$field = item;
-            }
-        )+
-    };
-}
 
 use chrono::{DateTime, Utc};
 use derive_builder::Builder;
