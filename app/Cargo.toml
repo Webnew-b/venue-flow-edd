@@ -11,3 +11,7 @@ garde = { version = "0.22.0", features = ["full"] }
 
 domain = {path = "../domain"}
 domain_core = {path = "../domain_core"}
+
+[dev-dependencies]
+async-trait = "0.1.88"
+mockall = "0.13.1"
