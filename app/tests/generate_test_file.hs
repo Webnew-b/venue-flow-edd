@@ -19,13 +19,6 @@ getRecursiveContents topPath = do
   firstDirs <- filterM doesDirectoryExist fullPaths
   concatMap'' getSubFileName firstDirs
 
-
--- getSubDirName :: FilePath -> IO [FilePath]
--- getSubDirName path = do 
---   names <- listDirectory path
---   let fullPaths = map (path </>) names
---   filterM doesDirectoryExist fullPaths
-  
 getSubFileName ::FilePath -> IO [FilePath]
 getSubFileName path = do 
   names <- listDirectory path
@@ -47,4 +40,5 @@ main = do
   putStrLn "Obtaining path name.."
   allFiles <- getRecursiveContents "../src/use_case/"
   mapM_ putStrLn allFiles
+  putStrLn "Generating test file..."
   mapM_ genrateTestFile allFiles
