@@ -14,4 +14,6 @@ domain_core = {path = "../domain_core"}
 
 [dev-dependencies]
 async-trait = "0.1.88"
+fake = "4.3.0"
 mockall = "0.13.1"
+tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread","test-util","full"]}

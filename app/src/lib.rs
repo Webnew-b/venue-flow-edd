@@ -8,7 +8,7 @@ pub mod commands;
 pub mod app_error;
 pub mod app_event;
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq, Eq)]
 pub enum AppUseCase {
     UserRegistrantion,
     UserLogin,
