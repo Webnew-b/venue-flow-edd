@@ -1,6 +1,3 @@
-use std::future::Future;
-use std::pin::Pin;
-
 use app::app_event::AppEvent;
 use app::commands::user_commands::{Email, LoginUserCommand, UserLoginType};
 use app::use_case::user::login::login_user;
@@ -13,6 +10,7 @@ use fake::faker::internet::en::{FreeEmail, Password, Username};
 use fake::Fake;
 
 use crate::common::user_common::{mock_user_setup, TestUserMocks};
+use crate::common::util_common::{util_mock_setup, TestUtilMock};
 
 mod common;
 
@@ -24,7 +22,7 @@ fn generate_mock_success<'test_mock>
     -> &'test_mock TestUserMocks 
 {
     
-    mock.repo.expect_find_user_by_name_and_pwd()
+    mock.repo.expect_find_user_by_name()
         .times(1)
         .return_once(move |_| {Ok(user)});
 
@@ -39,6 +37,15 @@ fn generate_mock_success<'test_mock>
         .times(1)
         .returning(|_|{Ok(())});
 
+    mock
+}
+
+fn create_fake_util<'test_mock>(
+        mock:&'test_mock mut TestUtilMock
+    ) -> &'test_mock TestUtilMock{
+    mock.password_hash
+        .expect_verify()
+        .returning(|_,_| Ok(()));
     mock
 }
 
@@ -68,12 +75,15 @@ fn create_fake_user() -> User {
 #[tokio::test]
 async fn test_login_success() {
     let mut test_mock = mock_user_setup();
+    let mut util_mock = util_mock_setup();
     let user = create_fake_user();
     let test_mock = generate_mock_success(&mut test_mock,user.clone());
+    let util_mock = create_fake_util(&mut util_mock);
 
     let repo = &test_mock.repo;
     let generator = &test_mock.generator;
     let validator = &test_mock.validator;
+    let util = &util_mock.password_hash;
     let info = LoginUserCommand{ 
         login_type: 
             UserLoginType::Email(
@@ -83,7 +93,7 @@ async fn test_login_success() {
             ), 
         password: user.password().to_string() 
     };
-    let res = login_user(repo, validator, generator, info).await;
+    let res = login_user(repo, validator, generator,util, info).await;
     match res {
         Ok(o) => {
             let id = user.id().unwrap();

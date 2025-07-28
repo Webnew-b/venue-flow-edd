@@ -1,6 +1,7 @@
 use domain::domain_error::domain_user_error::DomainUserError;
 use domain::domain_error::DomainError;
 use domain::user_domain::{UserGenerator, UserRepository, UserValidation};
+use domain::util_trait::PasswordHasher;
 use garde::Validate;
 
 use crate::app_error::user_error::AppUserError;
@@ -30,13 +31,15 @@ pub async fn login_user(
     repo:&impl UserRepository,
     validator:&impl UserValidation,
     generator:&impl UserGenerator,
+    password_hash:&impl PasswordHasher,
     info:LoginUserCommand,
 ) -> AppResult<Outcome<LoginedRes>> {
     let login_type = info.login_type.clone();
+    let password = info.password.clone();
 
     valid_login_type(validator, &login_type).await?;
 
-    let user = repo.find_user_by_name_and_pwd(info.into())
+    let user = repo.find_user_by_name(info.into())
         .await
         .map_err(|e|{
         let error:AppError = match e {
@@ -49,6 +52,8 @@ pub async fn login_user(
         };
         error
     })?;
+
+    password_hash.verify(password.as_str(), user.password())?;
 
     let token = generator.generate_token(&user)?.token;
 

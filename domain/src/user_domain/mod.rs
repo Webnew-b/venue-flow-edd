@@ -25,7 +25,7 @@ pub trait UserRepository:Sync+Send {
     async fn find_user_by_id(&self,id:i64) ->
         Result<User,DomainError>;
 
-    async fn find_user_by_name_and_pwd(&self,login:UserLoginName) ->
+    async fn find_user_by_name(&self,login:UserLoginName) ->
         Result<User,DomainError>;
 
     async fn save_user(self:&Self,user:User) ->
