@@ -16,18 +16,6 @@ use crate::common::user_common::{mock_user_setup, TestUserMocks};
 
 mod common;
 
-fn async_ok<T: Send + 'static, E: Send + 'static>(value: T) 
-    -> Pin<Box<dyn Future<Output = Result<T, E>> + Send>>
-{
-    Box::pin(async move { Ok(value) })
-}
-
-fn async_err<T: Send + 'static, E: Send + 'static>(err: E)
-    -> Pin<Box<dyn Future<Output = Result<T, E>> + Send>>
-{
-    Box::pin(async move { Err(err) })
-}
-
 fn generate_mock_success<'test_mock>
     (
         mock:&'test_mock mut TestUserMocks,
