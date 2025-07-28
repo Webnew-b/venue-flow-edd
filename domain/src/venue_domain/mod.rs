@@ -12,7 +12,7 @@ pub mod venue_dto;
 
 
 #[async_trait]
-pub trait VenueRepository {
+pub trait VenueRepository:Sync+Send {
 
     async fn find_venue_by_id(&self,id:i64) 
         -> Result<Venue,DomainError>;

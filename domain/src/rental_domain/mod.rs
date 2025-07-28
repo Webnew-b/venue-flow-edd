@@ -7,7 +7,7 @@ use crate::rental_domain::rental_dto::RentalRes;
 pub mod rental_dto;
 
 #[async_trait]
-pub trait RentalRespository {
+pub trait RentalRespository:Sync+Send {
     async fn find_rental_by_id(&self,id:i64)
         -> Result<Rental,DomainError>;
 
