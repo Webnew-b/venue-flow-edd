@@ -1,5 +1,5 @@
 use domain::user_domain::{UserRepository, UserValidation};
-use domain::util_trait::ImageRepository;
+use domain::util_trait::{ImageRepository, PasswordHasher};
 use domain_core::user::{UserBuilder, UserGender};
 use domain_core::utils::Clock;
 use garde::Validate;
@@ -16,6 +16,7 @@ pub async fn register_user<'image>(
     image_repo:&impl ImageRepository,
     validator:&impl UserValidation,
     time:&impl Clock,
+    password_hasher:&impl PasswordHasher,
     data:RegisterUserCommand<'image>,
 ) -> AppResult<Outcome<RegisteredUserDto>> {
 
@@ -29,14 +30,14 @@ pub async fn register_user<'image>(
     validator.valid_username(&username).await?;
     let builder = builder.username(username);
 
-    let builder = builder.password(data.password)
+    let password = password_hasher.hash(&data.password)?;
+    let builder = builder.password(password)
             .introduce(data.introduce);
 
     let gender = UserGender::get_gender(data.gender.as_str())
         .ok_or(AppUserError::InvalidGender)?;
     let builder = builder.gender(gender);
 
-    //todo Upload the user avatar to the oss
     let avatar = image_repo.upload_image(data.avatar).await?;
     let user = builder.avatar(avatar)
             .updatetime(time.now())
@@ -70,5 +71,5 @@ pub async fn register_user<'image>(
         password:user.password().to_string()
     };
 
-    Ok(Outcome::new(res,AppUseCase::BasicUserProfile))
+    Ok(Outcome::new(res,AppUseCase::UserRegistrantion))
 }
