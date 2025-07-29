@@ -1,5 +1,5 @@
 use domain::user_domain::{ UserRepository, UserValidation};
-use domain::util_trait::ImageRepository;
+use domain::util_trait::{ImageRepository, PasswordHasher};
 use domain_core::user::user_update::UserUpdate;
 use domain_core::user::UserGender;
 use domain_core::utils::Clock;
@@ -13,6 +13,7 @@ async fn get_update_struct<'image>(
     update:UpdateUserCommand<'image>,
     validator:&impl UserValidation,
     image_repo:&impl ImageRepository,
+    password_hasher:&impl PasswordHasher
     )
     -> AppResult<UserUpdate> {
     
@@ -39,7 +40,11 @@ async fn get_update_struct<'image>(
         validator.valid_email(e.as_str()).await?;
         update_struct.email = Some(e);
     }
-    update_struct.password = update.password;
+
+    if let Some(p) = update.password {
+        let password = password_hasher.hash(p.as_str())?;
+        update_struct.password = Some(password);
+    }
     update_struct.introduce = update.introduce;
 
     update_struct.valid_update().map_err(|e|{
@@ -57,10 +62,16 @@ pub async fn update_user<'image>(
     validator:&impl UserValidation,
     update:UpdateUserCommand<'image>,
     image_repo:&impl ImageRepository,
+    password_hasher:&impl PasswordHasher,
     clock:&impl Clock,
     )-> AppResult<Outcome<()>> {
     let id = update.id;
-    let update_struct = get_update_struct(update,validator,image_repo).await?;
+    let update_struct = get_update_struct(
+        update,
+        validator,
+        image_repo,
+        password_hasher
+    ).await?;
     let user = repo.find_user_by_id(id).await?;
     let user = user.update_user(update_struct,clock).map_err(|e|{
         AppError::UpdateEntityFailed {
