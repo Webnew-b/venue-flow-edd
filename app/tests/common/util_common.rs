@@ -1,6 +1,8 @@
+use chrono::Utc;
 use domain::util_trait::PasswordHasher;
 use domain::util_trait::ImageRepository;
 use domain::domain_error::DomainError;
+use domain_core::utils::Clock;
 
 use std::path::Path;
 use std::path::PathBuf;
@@ -38,5 +40,13 @@ pub fn util_mock_setup() -> TestUtilMock {
     TestUtilMock {
         image_repo: MockImageRepo::new(),
         password_hash: MockPwdHasher::new(),
+    }
+}
+
+pub struct MockTime{}
+
+impl Clock for MockTime {
+    fn now(&self) -> chrono::DateTime<chrono::Utc> {
+        Utc::now()
     }
 }

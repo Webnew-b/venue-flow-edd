@@ -117,6 +117,15 @@ pub struct User {
 }
 
 impl User {
+    pub fn update_id(
+        mut self,
+        id:i64,
+        time:&impl Clock
+        ) -> Self {
+        self.id = Some(id);
+        self.updatetime = time.now();
+        self
+    }
     pub fn update_email(
         mut self,
         new_email:String,

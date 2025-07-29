@@ -2,7 +2,6 @@ use app::app_event::AppEvent;
 use app::commands::user_commands::{Email, LoginUserCommand, UserLoginType};
 use app::use_case::user::login::login_user;
 use app::AppUseCase;
-use chrono::Utc;
 use domain::user_domain::user_dto::UserLoginToken;
 use domain_core::user::{User, UserBuilder, UserGender};
 use domain_core::utils::Clock;
@@ -10,7 +9,7 @@ use fake::faker::internet::en::{FreeEmail, Password, Username};
 use fake::Fake;
 
 use crate::common::user_common::{mock_user_setup, TestUserMocks};
-use crate::common::util_common::{util_mock_setup, TestUtilMock};
+use crate::common::util_common::{util_mock_setup, MockTime, TestUtilMock};
 
 mod common;
 
@@ -49,13 +48,7 @@ fn create_fake_util<'test_mock>(
     mock
 }
 
-struct MockTime{}
 
-impl Clock for MockTime {
-    fn now(&self) -> chrono::DateTime<chrono::Utc> {
-        Utc::now()
-    }
-}
 
 fn create_fake_user() -> User {
     let time = MockTime{};
