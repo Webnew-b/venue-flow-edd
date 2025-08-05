@@ -55,7 +55,7 @@ pub async fn create_venue<'image>(
 
     bulider.validate().map_err(|e|{
         AppError::EntityInvalid { 
-            entity_type: "user".to_string(),
+            entity_type: "venue".to_string(),
             cause: e.to_string()
         }
     })?;

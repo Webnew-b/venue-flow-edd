@@ -47,7 +47,7 @@ pub struct CreateVenueRes {
     pub description:Option<String>,
 }
 
-#[derive(Serialize,Deserialize,PartialEq, Eq,Clone)]
+#[derive(Serialize,Deserialize,PartialEq, Eq,Clone,Debug)]
 pub enum VenueStatusRes {
     Published,
     UnPublished,

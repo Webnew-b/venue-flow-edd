@@ -92,6 +92,16 @@ pub struct Venue {
 
 
 impl Venue {
+    pub fn update_id(
+        mut self,
+        id:i64,
+        time:&impl Clock
+        ) -> Self {
+        self.id = Some(id);
+        self.updatetime = time.now();
+        self
+    }
+
     pub fn list_venue(mut self,time:&impl Clock) -> Self {
         self.updatetime = time.now();
         self.status = VenueStatus::Published;

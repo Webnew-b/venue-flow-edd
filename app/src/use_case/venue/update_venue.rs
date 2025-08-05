@@ -45,7 +45,7 @@ async fn get_update_struct<'image>(
     Ok((update_struct,images))
 }
 
-pub async fn update_user<'image>(
+pub async fn update_venue<'image>(
     repo:&impl VenueRepository,
     image_repo:&impl ImageRepository,
     update:UpdateVenueCommand<'image>,
