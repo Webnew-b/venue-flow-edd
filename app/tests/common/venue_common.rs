@@ -46,6 +46,6 @@ pub struct TestVenueMocks{
     pub repo:MockVenueRepo,
 }
 
-pub fn venue_mock_setup() -> TestVenueMocks {
+pub fn mock_venue_setup() -> TestVenueMocks {
     TestVenueMocks { repo: MockVenueRepo::new() }
 }

@@ -36,7 +36,7 @@ pub struct TestUtilMock{
     pub password_hash:MockPwdHasher,
 }
 
-pub fn util_mock_setup() -> TestUtilMock {
+pub fn mock_utils_setup() -> TestUtilMock {
     TestUtilMock {
         image_repo: MockImageRepo::new(),
         password_hash: MockPwdHasher::new(),

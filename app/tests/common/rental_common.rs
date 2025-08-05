@@ -29,6 +29,6 @@ pub struct TestRentalMocks{
     pub repo:MockRentalRepo
 }
 
-pub fn rental_mock_setup() -> TestRentalMocks {
+pub fn mock_rental_setup() -> TestRentalMocks {
     TestRentalMocks { repo: MockRentalRepo::new() }
 }

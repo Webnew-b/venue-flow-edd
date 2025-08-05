@@ -9,7 +9,7 @@ use fake::faker::internet::en::{FreeEmail, Password, Username};
 use fake::Fake;
 
 use crate::common::user_common::{mock_user_setup, TestUserMocks};
-use crate::common::util_common::{util_mock_setup, MockTime, TestUtilMock};
+use crate::common::util_common::{mock_utils_setup, MockTime, TestUtilMock};
 
 mod common;
 
@@ -68,7 +68,7 @@ fn create_fake_user() -> User {
 #[tokio::test]
 async fn test_login_success() {
     let mut test_mock = mock_user_setup();
-    let mut util_mock = util_mock_setup();
+    let mut util_mock = mock_utils_setup();
     let user = create_fake_user();
     let test_mock = generate_mock_success(&mut test_mock,user.clone());
     let util_mock = create_fake_util(&mut util_mock);
