@@ -11,6 +11,7 @@ garde = { version = "0.22.0", features = ["full"] }
 
 domain = {path = "../domain"}
 domain_core = {path = "../domain_core"}
+util_macros = {path = "../util_macros"}
 
 [dev-dependencies]
 async-trait = "0.1.88"

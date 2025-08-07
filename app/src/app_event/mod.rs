@@ -1,3 +1,5 @@
+use domain::event_trait::EventExecutionMode;
+
 
 #[derive(Debug,Clone,PartialEq,Eq)]
 pub struct AppEventList {
@@ -59,4 +61,17 @@ pub enum AppEvent {
         organizer_name:String,
         organizer_id:i64,
     },
+}
+
+impl AppEvent {
+    pub fn execution_mode(&self) -> EventExecutionMode {
+        match self {
+            Self::LogUseCase => EventExecutionMode::Immediate,
+            Self::CanceledRentalRequest{ .. } 
+                | Self::ApprovedRentalRequest { .. }  
+                | Self::RejectedRentalRequest { .. }
+                => EventExecutionMode::Async,
+
+        }
+    }
 }

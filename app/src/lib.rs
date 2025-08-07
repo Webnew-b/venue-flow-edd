@@ -1,4 +1,7 @@
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
+use util_macros::IteralDisplay;
 
 use crate::app_event::AppEventList;
 
@@ -8,7 +11,7 @@ pub mod commands;
 pub mod app_error;
 pub mod app_event;
 
-#[derive(Debug,Clone,PartialEq, Eq)]
+#[derive(Debug,Clone,PartialEq, Eq, IteralDisplay)]
 pub enum AppUseCase {
     UserRegistrantion,
     UserLogin,
@@ -27,6 +30,15 @@ pub enum AppUseCase {
     
 
     GetData(String),
+}
+
+impl Display for AppUseCase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::GetData(s) => write!(f,"get {} data",s),
+            _ => write!(f,"{}",self.iteral_display())
+        }
+    }
 }
 
 #[derive(Debug,Clone)]
