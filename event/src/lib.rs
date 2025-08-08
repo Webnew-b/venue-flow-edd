@@ -19,9 +19,9 @@ pub mod event_service;
 
 pub struct EventSystem {
     queue:Arc<dyn AsyncQueue>,
-   dispatcher: EventDispatcher,
-   poller: EventPoller,
-   _poller_handle: JoinHandle<()>,
+    dispatcher: EventDispatcher,
+    poller: EventPoller,
+    _poller_handle: JoinHandle<()>,
 }
 
 impl EventSystem {
@@ -58,12 +58,10 @@ impl EventSystem {
        })
    }
    
-   /// 主要API：处理usecase的输出 - 立即事件执行，异步事件入队
    pub async fn process_outcome<T>(&self, outcome: Outcome<T>) -> EventResult<T> {
        self.dispatcher.process_outcome(outcome,&*self.queue).await
    }
    
-   /// 优雅关闭系统
    pub fn shutdown(&self) {
        self.poller.shutdown();
    }
