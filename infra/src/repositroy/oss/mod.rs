@@ -16,6 +16,8 @@ use tokio::time::sleep;
 use super::config::config::get_oss_fs;
 use super::config::gen_io_error;
 
+pub mod image_file;
+
 lazy_static!{
     pub static ref DETELE_FILE_QUEUE : Arc<(Sender<PathBuf>,Mutex<Receiver<PathBuf>>)> = {
         let (sender,receiver) = mpsc::channel(200);

@@ -9,7 +9,7 @@ use image::{ImageFormat, ImageReader};
 use serde::{Deserialize, Serialize};
 
 use crate::repositroy::image_file::{gen_uuid_image_name, save_file_to_oss, ImagePath};
-use crate::web::http::{CustomResponse, CustomResponseError};
+use crate::api::{CustomResponse, CustomResponseError};
 use crate::web::AppState;
 
 #[derive(Debug,MultipartForm)]

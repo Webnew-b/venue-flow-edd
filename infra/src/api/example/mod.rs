@@ -4,8 +4,8 @@ use actix_web::middleware::from_fn;
 use actix_web::{get, web, HttpResponse, Responder};
 use sea_orm::{DbBackend, FromQueryResult, Statement};
 
-use crate::web::http::middleware::encrypt::encrypt_middleware;
-use crate::web::http::CustomResponse;
+use crate::api::middleware::encrypt::encrypt_middleware;
+use crate::api::CustomResponse;
 use crate::web::AppState;
 
 

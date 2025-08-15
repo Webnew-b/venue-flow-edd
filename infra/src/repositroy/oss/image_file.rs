@@ -5,7 +5,6 @@ use std::path::{Path, PathBuf};
 use minio::s3::args::PutObjectArgs;
 use minio::s3::client::Client;
 
-use crate::oss::DETELE_FILE_QUEUE;
 
 pub struct ImagePath<'a>{
     pub bucket_name:String,

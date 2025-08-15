@@ -13,16 +13,14 @@ use tracing_actix_web::{
     DefaultRootSpanBuilder, RootSpanBuilder, TracingLogger,
 };
 
-use crate::web::http::default_service_handle_error;
-use crate::web::http::middleware::encrypt::add_service_error_handle;
+use crate::api::{self, default_service_handle_error};
+use crate::api::middleware::encrypt::add_service_error_handle;
 
 use super::config::config::get_web_server_config;
 use super::database::start_db_connection;
 //use super::oss::{self, OssClientConfig};
-use super::redis::create_redis_connection;
+use super::repositroy::redis::create_redis_connection;
 
-
-pub mod http;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -97,7 +95,7 @@ pub async fn start_web_server() -> std::io::Result<()> {
                 )
             .default_service(web::route().to(default_service_handle_error))
             .app_data(web::Data::new(state.clone()))
-            .configure(http::example::router)
+            .configure(api::example::router)
     })
     .bind(config)
     .map_err(|e| {

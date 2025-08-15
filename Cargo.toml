@@ -1,11 +1,12 @@
 [workspace]
-members = [ "api", 
+members = [ 
   "app",
   "domain", 
   "domain_core", 
   "event", 
-  "infra"
-, "util_macros"]
+  "infra", 
+  "util_macros"
+  ,"migration"]
 
 resolver = "2"
 

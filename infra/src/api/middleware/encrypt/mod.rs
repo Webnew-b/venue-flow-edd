@@ -5,8 +5,8 @@ use actix_web::middleware::{ErrorHandlerResponse, Next};
 use actix_web::{Error, HttpResponse};
 use log::info;
 
-use crate::web::http::response_code::CodeEnum;
-use crate::web::http::CustomResponse;
+use crate::api::response_code::CodeEnum;
+use crate::api::CustomResponse;
 
 
 pub async fn encrypt_middleware(

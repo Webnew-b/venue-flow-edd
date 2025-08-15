@@ -4,6 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+domain_core = {path = "../domain_core"}
+domain = {path = "../domain"}
+app = {path = "../app"}
+event = {path = "../event"}
+
 actix-multipart = "0.7.2"
 actix-web = "4.9.0"
 actix-web-validator = "6.0.0"

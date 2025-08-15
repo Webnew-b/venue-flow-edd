@@ -3,8 +3,7 @@ use core::fmt;
 use actix_web::{HttpResponse, Responder, ResponseError};
 use serde::{Deserialize, Serialize};
 
-use crate::web::http::response_code::{get_code, CodeEnum};
-
+use crate::api::response_code::{get_code, CodeEnum};
 
 pub mod example;
 pub(crate) mod middleware;
