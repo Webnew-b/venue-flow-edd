@@ -6,7 +6,7 @@ use sea_orm::{DbBackend, FromQueryResult, Statement};
 
 use crate::api::middleware::encrypt::encrypt_middleware;
 use crate::api::CustomResponse;
-use crate::web::AppState;
+use crate::web::app_state::AppState;
 
 
 pub fn router(cfg: &mut web::ServiceConfig) {
