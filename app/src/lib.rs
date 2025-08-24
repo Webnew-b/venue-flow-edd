@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use serde::{Deserialize, Serialize};
 use util_macros::IteralDisplay;
 
 use crate::app_event::AppEventList;
