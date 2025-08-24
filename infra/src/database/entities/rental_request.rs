@@ -14,11 +14,11 @@ pub struct Model {
     pub start_time: DateTime,
     pub end_time: DateTime,
     pub activity_type: ActivityType,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub request_comments: Option<String>,
-    pub status: Option<RequestStatus>,
-    pub createtime: Option<DateTime>,
-    pub updatetime: Option<DateTime>,
+    #[sea_orm(column_type = "Text")]
+    pub request_comments: String,
+    pub status: RequestStatus,
+    pub createtime: DateTime,
+    pub updatetime: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

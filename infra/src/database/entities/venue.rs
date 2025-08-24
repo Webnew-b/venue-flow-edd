@@ -15,11 +15,11 @@ pub struct Model {
     pub capacity: i32,
     #[sea_orm(column_type = "JsonBinary")]
     pub images: Json,
-    #[sea_orm(column_type = "JsonBinary", nullable)]
-    pub allow_activity: Option<Json>,
-    pub state: Option<VenueState>,
-    pub createtime: Option<DateTime>,
-    pub updatetime: Option<DateTime>,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub allow_activity: Json,
+    pub state: VenueState,
+    pub createtime: DateTime,
+    pub updatetime: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

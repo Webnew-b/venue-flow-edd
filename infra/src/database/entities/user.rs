@@ -11,14 +11,14 @@ pub struct Model {
     pub id: i64,
     pub username: String,
     pub email: String,
-    pub avatar: Option<String>,
-    pub gender: Option<UserGender>,
+    pub avatar: String,
+    pub gender: UserGender,
     pub introduce: Option<String>,
-    pub is_show: Option<bool>,
-    pub is_delete: Option<bool>,
-    pub status: Option<UserStatus>,
-    pub createtime: Option<DateTime>,
-    pub updatetime: Option<DateTime>,
+    pub is_show: bool,
+    pub is_delete: bool,
+    pub status: UserStatus,
+    pub createtime: DateTime,
+    pub updatetime: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

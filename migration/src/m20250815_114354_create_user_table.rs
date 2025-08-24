@@ -8,25 +8,25 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
         let db = manager.get_connection();
-        db.execute_unprepared(r#"CREATE TABLE IF NOT EXISTS "venue" (
+        db.execute_unprepared(r#"CREATE TABLE IF NOT EXISTS "user" (
 id BIGSERIAL PRIMARY KEY,
-lessor_id BIGSERIAL NOT NULL,
-name varchar(255) NOT NULL,
-description varchar(500) NOT NULL,
-address varchar(255) NOT NULL,
-capacity int NOT NULL DEFAULT 0,
-images JSONB NOT NULL,
-allow_activity JSONB DEFAULT '["all"]'::jsonb,
-state venue_state DEFAULT 'published',
-createTime timestamp DEFAULT now(),
-updateTime timestamp
+username varchar(255) NOT NULL,
+email varchar(255) NOT NULL,
+avatar varchar(255) NOT NULL,
+gender user_gender NOT NULL DEFAULT 'prefer_not_to_say',
+introduce varchar(300) NOT NULL,
+is_show bool NOT NULL DEFAULT false,
+is_delete bool NOT NULL DEFAULT false,
+status user_status NOT NULL DEFAULT 'active',
+createTime timestamp NOT NULL DEFAULT now(),
+updateTime timestamp NOT NULL
 );"#).await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
-        db.execute_unprepared(r#"DROP TABLE IF EXISTS "venue""#).await?;
+        db.execute_unprepared(r#"DROP TABLE IF EXISTS "user""#).await?;
         Ok(())
     }
 }

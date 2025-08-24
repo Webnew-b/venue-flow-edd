@@ -10,9 +10,9 @@ pub struct Model {
     #[sea_orm(unique)]
     pub user_id: i64,
     pub phone: String,
-    pub is_delete: Option<bool>,
-    pub createtime: Option<DateTime>,
-    pub updatetime: Option<DateTime>,
+    pub is_delete: bool,
+    pub createtime: DateTime,
+    pub updatetime: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -8,25 +8,24 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
         let db = manager.get_connection();
-        db.execute_unprepared(r#"CREATE TABLE IF NOT EXISTS "user" (
+        db.execute_unprepared(r#"CREATE TABLE IF NOT EXISTS "rental_request" (
 id BIGSERIAL PRIMARY KEY,
-username varchar(255) NOT NULL,
-email varchar(255) NOT NULL,
-avatar varchar(255),
-gender user_gender DEFAULT 'prefer_not_to_say',
-introduce varchar(300),
-is_show bool DEFAULT false,
-is_delete bool DEFAULT false,
-status user_status DEFAULT 'active',
-createTime timestamp DEFAULT now(),
-updateTime timestamp
+organizer_id BIGSERIAL NOT NULL,
+venue_id BIGSERIAL NOT NULL,
+start_time timestamp NOT NULL,
+end_time timestamp NOT NULL,
+activity_type activity_type NOT NULL DEFAULT 'all',
+request_comments text NOT NULL,
+status request_status NOT NULL DEFAULT 'pending',
+createTime timestamp NOT NULL DEFAULT now(),
+updateTime timestamp NOT NULL
 );"#).await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
-        db.execute_unprepared(r#"DROP TABLE IF EXISTS "user""#).await?;
+        db.execute_unprepared(r#"DROP TABLE IF EXISTS "rental_request""#).await?;
         Ok(())
     }
 }

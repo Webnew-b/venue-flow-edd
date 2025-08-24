@@ -23,6 +23,8 @@ pub enum RequestStatus {
     Rejected,
     #[sea_orm(string_value = "finished")]
     Finished,
+    #[sea_orm(string_value = "canceled")]
+    Canceled,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "user_gender")]

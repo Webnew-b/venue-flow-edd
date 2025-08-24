@@ -12,9 +12,9 @@ impl MigrationTrait for Migration {
 id BIGSERIAL PRIMARY KEY,
 user_id BIGSERIAL NOT NULL UNIQUE,
 phone varchar(255) NOT NULL,
-is_delete bool DEFAULT false,
+is_delete bool NOT NULL DEFAULT false,
 createTime timestamp DEFAULT now(),
-updateTime timestamp
+updateTime timestamp NOT NULL
 );"#).await?;
         Ok(())
     }
