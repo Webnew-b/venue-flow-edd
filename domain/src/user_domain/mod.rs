@@ -37,9 +37,6 @@ pub trait UserRepository:Sync+Send {
     async fn delete_user(self:&Self,id:i64) ->
         Result<(),DomainError>;
 
-    //async fn cache_user(self:&Self,user:UserLoginName) ->
-    //    Result<String,DomainError>;
-
     async fn logout(self:&Self,token:String) ->
         Result<(),DomainError>;
 
