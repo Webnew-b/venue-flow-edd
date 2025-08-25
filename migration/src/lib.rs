@@ -24,6 +24,7 @@ mod m20250815_114354_create_rental_request_table;
 mod m20250815_114355_fk_organizer_to_rental_request;
 mod m20250823_152948_modify_user_table;
 mod m20250824_064038_modify_requsest_status;
+mod m20250825_064838_modify_user_table;
 
 #[async_trait::async_trait]
 impl MigratorTrait for Migrator {
@@ -46,6 +47,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20250815_114355_fk_organizer_to_rental_request::Migration),
             Box::new(m20250823_152948_modify_user_table::Migration),
             Box::new(m20250824_064038_modify_requsest_status::Migration),
+            Box::new(m20250825_064838_modify_user_table::Migration),
         ]
     }
 }
