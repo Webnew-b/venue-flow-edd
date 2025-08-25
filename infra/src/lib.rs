@@ -5,4 +5,4 @@ pub mod web;
 pub mod repositroy;
 pub mod command;
 pub mod api;
-
+pub mod service;

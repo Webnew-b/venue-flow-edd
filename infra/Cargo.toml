@@ -9,6 +9,7 @@ domain = {path = "../domain"}
 app = {path = "../app"}
 event = {path = "../event"}
 
+async-trait = "0.1.88"
 actix-multipart = "0.7.2"
 actix-web = "4.9.0"
 actix-web-validator = "6.0.0"
