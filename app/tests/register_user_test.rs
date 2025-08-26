@@ -13,44 +13,42 @@ use crate::common::util_common::{mock_utils_setup, MockTime, TestUtilMock};
 
 mod common;
 
-fn generate_mock_success<'test_mock>
-    (
-        mock:&'test_mock mut TestUserMocks,
-    ) 
-    -> &'test_mock TestUserMocks 
-{
-    mock.repo.expect_create_user()
+fn generate_mock_success<'test_mock>(
+    mock: &'test_mock mut TestUserMocks,
+) -> &'test_mock TestUserMocks {
+    mock.repo
+        .expect_create_user()
         .times(1)
         .return_once(move |u| {
-            let time = MockTime{};
-            let user = u.update_id(1,&time);
+            let time = MockTime {};
+            let user = u.update_id(1);
             Ok(user)
         });
 
-    mock.validator.expect_valid_email()
+    mock.validator
+        .expect_valid_email()
         .times(1)
-        .returning(|_|{Ok(())});
+        .returning(|_| Ok(()));
 
-    mock.validator.expect_valid_username()
+    mock.validator
+        .expect_valid_username()
         .times(1)
-        .returning(|_|{Ok(())});
+        .returning(|_| Ok(()));
     mock
 }
 
 fn create_fake_util<'test_mock>(
-        mock:&'test_mock mut TestUtilMock
-    ) -> &'test_mock TestUtilMock{
+    mock: &'test_mock mut TestUtilMock,
+) -> &'test_mock TestUtilMock {
     mock.password_hash
         .expect_hash()
         .returning(|s| Ok(s.to_string()));
 
-    mock.image_repo
-        .expect_upload_image()
-        .returning(|e|{
-            let url = e.to_str().unwrap().to_string();
-            let url = format!("https://www.test.com{}",url);
-            Ok(url)
-        });
+    mock.image_repo.expect_upload_image().returning(|e| {
+        let url = e.to_str().unwrap().to_string();
+        let url = format!("https://www.test.com{}", url);
+        Ok(url)
+    });
     mock
 }
 
@@ -63,54 +61,47 @@ async fn test_login_success() {
     let util_mock = create_fake_util(&mut util_mock);
 
     let repo = &test_mock.repo;
-    let time = MockTime{};
+    let time = MockTime {};
     let validator = &test_mock.validator;
     let util = &util_mock.password_hash;
     let image_repo = &util_mock.image_repo;
-    
+
     let path = Path::new("/aa/aaww.png");
     let pwd = Password(6..30).fake::<String>();
     let email = FreeEmail().fake::<String>();
     let username = Username().fake::<String>();
 
-    let data = RegisterUserCommand{
-        password:pwd.clone(),
-        username: username.clone(), 
+    let data = RegisterUserCommand {
+        password: pwd.clone(),
+        username: username.clone(),
         email: email.clone(),
-        avatar: path.as_ref(), 
+        avatar: path.as_ref(),
         gender: "male".to_string(),
-        introduce: None 
+        introduce: None,
     };
-    let res = register_user(
-        repo,
-        image_repo,
-        validator,
-        &time,
-        util, 
-        data
-    ).await;
+    let res =
+        register_user(repo, image_repo, validator, &time, util, data).await;
 
     let avatar = path.to_str().unwrap().to_string();
-    let avatar = format!("https://www.test.com{}",avatar);
+    let avatar = format!("https://www.test.com{}", avatar);
 
     match res {
         Ok(o) => {
-
             let data = o.data;
             let event = o.events.get_elements();
             let use_case = o.from_case;
 
             let test_vec = vec![AppEvent::LogUseCase];
-            assert_eq!(test_vec,event,"The event doesn't equal.");
-            assert_eq!(use_case,AppUseCase::UserRegistrantion);
+            assert_eq!(test_vec, event, "The event doesn't equal.");
+            assert_eq!(use_case, AppUseCase::UserRegistrantion);
 
-            assert_eq!(data.id,1i64);
-            assert_eq!(data.username,username);
-            assert_eq!(data.email,email);
-            assert_eq!(data.avatar,avatar);
-            assert_eq!(data.gender,UserGender::Male.to_string());
-            assert_eq!(data.password,pwd);
+            assert_eq!(data.id, 1i64);
+            assert_eq!(data.username, username);
+            assert_eq!(data.email, email);
+            assert_eq!(data.avatar, avatar);
+            assert_eq!(data.gender, UserGender::Male.to_string());
+            assert_eq!(data.password, pwd);
         },
-        Err(e) => panic!("Unexpect arm:{}",e),
+        Err(e) => panic!("Unexpect arm:{}", e),
     }
 }
