@@ -11,7 +11,7 @@ pub struct Model {
     pub user_id: i64,
     pub phone: String,
     pub is_delete: bool,
-    pub createtime: Option<DateTime>,
+    pub createtime: DateTime,
     pub updatetime: DateTime,
 }
 
