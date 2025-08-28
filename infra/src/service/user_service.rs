@@ -13,6 +13,8 @@ use crate::service::user_service::enum_converstion::{
 };
 
 use async_trait::async_trait;
+use chrono::Duration;
+use chrono::Utc;
 use domain::domain_error::database_error::DatabaseError;
 use domain::domain_error::domain_user_error::DomainUserError;
 use domain::domain_error::DomainError;
@@ -25,6 +27,7 @@ use domain_core::user::lessor::Lessor;
 use domain_core::user::lessor::LessorBuilder;
 use domain_core::user::organizer::{Organizer, OrganizerBuilder};
 use domain_core::user::{User, UserBuilder};
+use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use r2d2::Pool;
 use r2d2_redis::RedisConnectionManager;
 use sea_orm::ActiveValue::{NotSet, Set};
@@ -32,6 +35,7 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait,
     QueryFilter,
 };
+use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 pub mod enum_converstion;
@@ -128,6 +132,14 @@ pub(crate) fn db_lessor_to_domain(
 pub(crate) struct UserService {
     database: Arc<DatabaseConnection>,
     redis: Arc<Mutex<Pool<RedisConnectionManager>>>,
+    jwt_secret: Arc<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Claims {
+    sub: String, // Subject (通常是用户ID)
+    company: String,
+    exp: usize, // Expiration time (JWT 标准字段)
 }
 
 impl UserService {
@@ -183,7 +195,25 @@ impl UserGenerator for UserService {
         &self,
         user: &User,
     ) -> Result<UserLoginToken, DomainError> {
-        todo!()
+        let id = user.id().expect("The user id must be exsited.");
+        let claims = Claims {
+            sub: id.to_string(),
+            company: "lexon".to_owned(),
+            exp: (Utc::now() + Duration::hours(2)).timestamp() as usize, // 1小时前过期
+        };
+
+        let header = Header::new(Algorithm::HS256); // 使用 HMAC SHA256 算法
+
+        let token = encode(
+            &header,
+            &claims,
+            &EncodingKey::from_secret(self.jwt_secret.as_str().as_bytes()),
+        )
+        .map_err(|e| {
+            log::error!("{}", e);
+            DomainUserError::InvalidTokenGeneration
+        })?;
+        Ok(UserLoginToken { token })
     }
 }
 

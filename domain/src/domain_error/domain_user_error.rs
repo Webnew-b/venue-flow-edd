@@ -25,4 +25,7 @@ pub enum DomainUserError {
 
     #[error("The user name is not found")]
     UserNameNotFound,
+
+    #[error("Fail to generate token.")]
+    InvalidTokenGeneration,
 }

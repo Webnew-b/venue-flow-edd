@@ -38,6 +38,8 @@ tracing-actix-web = "0.7.15"
 tracing-appender = "0.2.3"
 tracing-subscriber = { version = "0.3.18", features = ["std","fmt","env-filter","json"]}
 validator = { version = "0.19", features = ["derive"] }
+jsonwebtoken = "9.3.1"
+chrono = "0.4.41"
 
 [dependencies.uuid]
 version = "1.11.0"
