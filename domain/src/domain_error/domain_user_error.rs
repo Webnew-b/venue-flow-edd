@@ -19,4 +19,10 @@ pub enum DomainUserError {
 
     #[error("Failed to contsturct domain lessor from db user.")]
     InvalidLessorContstruction,
+
+    #[error("The Email is not found")]
+    EmailNotFound,
+
+    #[error("The user name is not found")]
+    UserNameNotFound,
 }

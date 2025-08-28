@@ -16,8 +16,11 @@ use async_trait::async_trait;
 use domain::domain_error::database_error::DatabaseError;
 use domain::domain_error::domain_user_error::DomainUserError;
 use domain::domain_error::DomainError;
+use domain::user_domain::user_dto::UserLoginToken;
 use domain::user_domain::user_dto::{UserLoginEnum, UserLoginName};
+use domain::user_domain::UserGenerator;
 use domain::user_domain::UserRepository;
+use domain::user_domain::UserValidation;
 use domain_core::user::lessor::Lessor;
 use domain_core::user::lessor::LessorBuilder;
 use domain_core::user::organizer::{Organizer, OrganizerBuilder};
@@ -172,6 +175,48 @@ impl UserService {
             },
             None => Ok(None),
         }
+    }
+}
+
+impl UserGenerator for UserService {
+    fn generate_token(
+        &self,
+        user: &User,
+    ) -> Result<UserLoginToken, DomainError> {
+        todo!()
+    }
+}
+
+#[async_trait]
+impl UserValidation for UserService {
+    async fn valid_email(&self, email: &str) -> Result<(), DomainError> {
+        // todo validate the email format and something else.
+        self.exist_email(email).await?;
+        Ok(())
+    }
+    async fn valid_username(&self, username: &str) -> Result<(), DomainError> {
+        let username = UserEntity::find()
+            .filter(UserCrate::Column::Username.eq(username))
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+        username.ok_or(DomainUserError::EmailNotFound)?;
+        Ok(())
+    }
+    async fn exist_email(&self, email: &str) -> Result<(), DomainError> {
+        let email = UserEntity::find()
+            .filter(UserCrate::Column::Email.eq(email))
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+        email.ok_or(DomainUserError::EmailNotFound)?;
+        Ok(())
     }
 }
 
