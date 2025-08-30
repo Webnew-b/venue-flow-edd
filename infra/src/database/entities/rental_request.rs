@@ -14,8 +14,8 @@ pub struct Model {
     pub start_time: DateTime,
     pub end_time: DateTime,
     pub activity_type: ActivityType,
-    #[sea_orm(column_type = "Text")]
-    pub request_comments: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub request_comments: Option<String>,
     pub status: RequestStatus,
     pub createtime: DateTime,
     pub updatetime: DateTime,
