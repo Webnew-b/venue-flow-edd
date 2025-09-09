@@ -5,3 +5,4 @@ pub use super::organizer::Entity as Organizer;
 pub use super::rental_request::Entity as RentalRequest;
 pub use super::user::Entity as User;
 pub use super::venue::Entity as Venue;
+pub use super::venue_image_uri::Entity as VenueImageUri;

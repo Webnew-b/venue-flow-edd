@@ -8,3 +8,4 @@ pub mod rental_request;
 pub mod sea_orm_active_enums;
 pub mod user;
 pub mod venue;
+pub mod venue_image_uri;
