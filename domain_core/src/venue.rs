@@ -67,8 +67,7 @@ pub struct Venue {
     capacity: i32,
 
     #[garde(skip)]
-    #[builder(default)]
-    description: Option<String>,
+    description: String,
 
     #[garde(skip)]
     #[builder(default = "true")]
@@ -119,9 +118,8 @@ impl Venue {
     ) -> DomainCoreResult<Self> {
         update.is_vaild_update_command()?;
 
-        field_fill!(self, update, name, address, capacity);
+        field_fill!(self, update, name, address, capacity, description);
 
-        self.description = update.description;
         self.updatetime = time.now();
         Ok(self)
     }
@@ -141,6 +139,7 @@ impl VenueBuilder {
     fn validate_builder(&self) -> DomainCoreResult<()> {
         require_field!(self.lessor_id, "lessor_id");
         require_field!(self.name, "name");
+        require_field!(self.description, "description");
         require_field!(self.address, "address");
         require_field!(self.images, "images");
         require_field!(self.capacity, "capacity");
@@ -175,6 +174,7 @@ mod tests {
             .lessor_id(1)
             .name("Initial Venue Name".to_string())
             .address("123 Main St".to_string())
+            .description("test venue".to_string())
             .images(vec![])
             .capacity(100)
             .createtime(now)
@@ -209,9 +209,7 @@ mod tests {
         assert_eq!(*updated_venue.capacity(), 250);
         assert_eq!(
             updated_venue.description(),
-            &Some(
-                "This is a valid description with enough length.".to_string()
-            )
+            "This is a valid description with enough length."
         );
         assert_eq!(*updated_venue.updatetime(), clock.now);
     }
@@ -280,17 +278,23 @@ mod tests {
         // 使用 VenueImage::new 构造函数，它已经包含了内在的校验逻辑
         let new_images = vec![
             VenueImage::new(
+                venue.id().unwrap().clone(),
                 "A Great Title".to_string(), // valid length
                 "https://example.com/image1.png".to_string(), // valid url
                 None,
+                Utc::now(),
             )
-            .unwrap(),
+            .unwrap()
+            .update_id(1),
             VenueImage::new(
+                venue.id().unwrap().clone(),
                 "Another Awesome Title".to_string(),
                 "https://example.com/image2.jpg".to_string(),
                 Some("A descriptive comment for the image.".to_string()), // valid length
+                Utc::now(),
             )
-            .unwrap(),
+            .unwrap()
+            .update_id(2),
         ];
 
         let updated_venue = venue.update_images(new_images.clone(), &clock);

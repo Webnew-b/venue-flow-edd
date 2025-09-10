@@ -10,4 +10,7 @@ pub enum DomainVenueError {
 
     #[error("Failed to contsturct domain lessor from db user.")]
     InvalidLessorContstruction,
+
+    #[error("Image id must be exsit while construct the 'VenueImageRes'")]
+    ImageIdInexist,
 }
