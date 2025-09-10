@@ -1,3 +1,4 @@
+use domain::domain_error::DomainError;
 use domain::user_domain::UserRepository;
 use domain::util_trait::ImageRepository;
 use domain::venue_domain::VenueRepository;
@@ -7,37 +8,66 @@ use domain_core::venue::VenueBuilder;
 use garde::Validate;
 
 use crate::app_error::{AppError, AppResult};
-use crate::commands::venue_commands::{CreateVenueCommand, CreateVenueRes, VenueImageRes};
+use crate::commands::venue_commands::{
+    CreateVenueCommand, CreateVenueRes, VenueImageCommand, VenueImageRes,
+};
 use crate::{AppUseCase, Outcome};
 
+pub(super) async fn save_image_data(
+    venue_repo: &impl VenueRepository,
+    images: Vec<VenueImage>,
+) -> AppResult<Vec<VenueImageRes>> {
+    let images = venue_repo.save_image_data(images).await?;
+
+    let mut res_image: Vec<VenueImageRes> = vec![];
+    images.into_iter().try_for_each(|x| {
+        let res: VenueImageRes = x.try_into()?;
+        res_image.push(res);
+        Ok::<(), DomainError>(())
+    })?;
+    Ok(res_image)
+}
+
+pub(super) async fn create_image_data<'image>(
+    image_repo: &impl ImageRepository,
+    time: &impl Clock,
+    venue_id: i64,
+    upload_images: &[VenueImageCommand<'image>],
+) -> AppResult<Vec<VenueImage>> {
+    let mut images: Vec<VenueImage> = vec![];
+
+    for item in upload_images {
+        let uri = image_repo.upload_image(item.image).await?;
+        images.push(VenueImage {
+            id: None,
+            venue_id,
+            title: item.title.to_string(),
+            uri,
+            comment: item.comment.clone(),
+            createtime: time.now(),
+        });
+    }
+
+    Ok(images)
+}
+
 pub async fn create_venue<'image>(
-    user_repo:&impl UserRepository,
-    veune_repo:&impl VenueRepository,
-    image_repo:&impl ImageRepository,
-    venue_create:CreateVenueCommand<'image>,
-    time:&impl Clock,
-) -> AppResult<Outcome<CreateVenueRes>>{
+    user_repo: &impl UserRepository,
+    venue_repo: &impl VenueRepository,
+    image_repo: &impl ImageRepository,
+    venue_create: CreateVenueCommand<'image>,
+    time: &impl Clock,
+) -> AppResult<Outcome<CreateVenueRes>> {
     let lessor = user_repo
         .find_lessor_by_user_id(venue_create.user_id)
         .await?;
 
-    let lessor_id = lessor.id()
-        .ok_or(AppError::IdInexisted("veune".to_string()))?;
-
-    let mut images = vec![]; 
-
-    for item in venue_create.images  {
-        let uri = image_repo.upload_image(item.image).await?;
-        images.push(VenueImage{
-            title:item.title,
-            uri,
-            comment:item.comment,
-        });
-    };
-
+    let lessor_id = lessor
+        .id()
+        .ok_or(AppError::IdInexisted("venue".to_string()))?;
 
     let bulider = VenueBuilder::default()
-        .images(images)
+        .images(vec![])
         .name(venue_create.name)
         .lessor_id(lessor_id)
         .address(venue_create.address)
@@ -45,41 +75,44 @@ pub async fn create_venue<'image>(
         .capacity(venue_create.capacity)
         .updatetime(time.now())
         .createtime(time.now())
-        .build().map_err(|e|{
-            AppError::CreateEntityFailed { 
-                entity_type: "venue".to_string(),
-                message: e.to_string(), 
-                source: e
-            }
+        .build()
+        .map_err(|e| AppError::CreateEntityFailed {
+            entity_type: "venue".to_string(),
+            message: e.to_string(),
+            source: e,
         })?;
 
-    bulider.validate().map_err(|e|{
-        AppError::EntityInvalid { 
-            entity_type: "venue".to_string(),
-            cause: e.to_string()
-        }
+    bulider.validate().map_err(|e| AppError::EntityInvalid {
+        entity_type: "venue".to_string(),
+        cause: e.to_string(),
     })?;
 
-    let venue_res = veune_repo.create_venue(bulider).await?;
+    let venue_res = venue_repo.create_venue(bulider).await?;
 
-    let id = venue_res.id().ok_or(AppError::IdInexisted("venue".to_string()))?;
+    let id = venue_res
+        .id()
+        .ok_or(AppError::IdInexisted("venue".to_string()))?;
 
-    let res_image:Vec<VenueImageRes> = venue_res.images()
-        .to_vec()
-        .clone()
-        .into_iter()
-        .map(|x|{
-            x.into()
-        })
-        .collect();
+    let images = if venue_create.images.is_empty() {
+        vec![]
+    } else {
+        let images = create_image_data(
+            image_repo,
+            time,
+            id,
+            venue_create.images.as_ref(),
+        )
+        .await?;
 
-    let res =  CreateVenueRes {
+        save_image_data(venue_repo, images).await?
+    };
+    let res = CreateVenueRes {
         id,
-        name:venue_res.name().to_string(),
-        address:venue_res.address().to_string(),
-        images:res_image,
-        capacity:venue_res.capacity().clone(),
-        description:venue_res.description().clone(),
+        name: venue_res.name().to_string(),
+        address: venue_res.address().to_string(),
+        images,
+        capacity: venue_res.capacity().clone(),
+        description: venue_res.description().clone(),
     };
 
     Ok(Outcome::new(res, AppUseCase::CreateVenue))
