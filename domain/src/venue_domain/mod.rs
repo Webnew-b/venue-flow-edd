@@ -26,11 +26,6 @@ pub trait VenueRepository: Sync + Send {
         page: PageLimit,
     ) -> Result<Vec<Venue>, DomainError>;
 
-    async fn modify_venue(
-        &self,
-        update: VenueUpdate,
-    ) -> Result<(), DomainError>;
-
     async fn create_venue(&self, v: Venue) -> Result<Venue, DomainError>;
 
     async fn save_venue(&self, v: Venue) -> Result<(), DomainError>;

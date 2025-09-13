@@ -124,13 +124,8 @@ impl Venue {
         Ok(self)
     }
 
-    pub fn update_images(
-        mut self,
-        images: Vec<VenueImage>,
-        time: &impl Clock,
-    ) -> Self {
+    pub fn update_images(mut self, images: Vec<VenueImage>) -> Self {
         self.images = images;
-        self.updatetime = time.now();
         self
     }
 }
@@ -297,7 +292,7 @@ mod tests {
             .update_id(2),
         ];
 
-        let updated_venue = venue.update_images(new_images.clone(), &clock);
+        let updated_venue = venue.update_images(new_images.clone());
 
         assert_eq!(
             updated_venue.images().len(),

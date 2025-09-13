@@ -11,25 +11,28 @@ use domain::{
 };
 use domain_core::{
     user::lessor::Lessor,
-    venue::{
-        venue_image::VenueImage, venue_update::VenueUpdate, Venue, VenueBuilder,
-    },
+    venue::{venue_image::VenueImage, Venue, VenueBuilder},
 };
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseBackend, DatabaseConnection, EntityTrait, LoaderTrait,
-    PaginatorTrait, QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, LoaderTrait, PaginatorTrait,
+    QueryFilter,
 };
+use validator::ValidateLength;
 
 use crate::{
     database::entities::{
         lessor as LessorCrate,
         sea_orm_active_enums::{ActivityType, VenueState},
-        venue as VenueCrate, venue_image_uri as VenueImageUri,
+        user as UserCrate, venue as VenueCrate,
+        venue_image_uri as VenueImageUri,
     },
-    service::venue_service::enum_converstion::{
-        venue_status_to_db, venue_status_to_domain,
+    service::{
+        user_service::{db_lessor_to_domain, db_user_to_domain_user},
+        venue_service::enum_converstion::{
+            venue_status_to_db, venue_status_to_domain,
+        },
     },
 };
 
@@ -191,24 +194,36 @@ impl VenueRepository for VenueService {
         Ok(venue)
     }
 
-    async fn modify_venue(
-        &self,
-        update: VenueUpdate,
-    ) -> Result<(), DomainError> {
-    }
-
     async fn create_venue(&self, v: Venue) -> Result<Venue, DomainError> {
-        let venue = domain_venue_to_db(v.clone());
+        let (venue, venue_images) = domain_venue_to_db(v.clone());
         let venue = venue.insert(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
             DatabaseError::SaveEntityFail
         })?;
+        let _ = VenueImageUri::Entity::insert_many(venue_images)
+            .exec(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SaveEntityFail
+            })?;
         let v = v.update_id(venue.id);
+        let venue_images = VenueImageUri::Entity::find()
+            .filter(VenueImageUri::Column::VenueId.eq(venue.id))
+            .all(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+        let venue_images =
+            venue_images.iter().map(venue_image_to_domain).collect();
+        let v = v.update_images(venue_images);
         Ok(v)
     }
 
     async fn save_venue(&self, v: Venue) -> Result<(), DomainError> {
-        let venue = domain_venue_to_db(v);
+        let (venue, _venue_images) = domain_venue_to_db(v);
         venue.save(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
             DatabaseError::SaveEntityFail
@@ -220,6 +235,17 @@ impl VenueRepository for VenueService {
         &self,
         page: PageLimit,
     ) -> Result<Vec<IndexVenue>, DomainError> {
+        let venues = VenueCrate::Entity::find()
+            .filter(VenueCrate::Column::State.eq(VenueState::Published))
+            .paginate(self.database.deref(), page.limit)
+            .fetch_page(page.page)
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+        let index_venues = venues.into_iter().map(|m| m).collect();
+        Ok(index_venues)
     }
 
     async fn is_venue_owned_by_lessor(
@@ -243,5 +269,74 @@ impl VenueRepository for VenueService {
         &self,
         venue_id: i64,
     ) -> Result<Lessor, DomainError> {
+        let venue = VenueCrate::Entity::find_by_id(venue_id)
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+
+        let venue = venue.ok_or(DatabaseError::DataNotFound)?;
+        let (lessor, user) = LessorCrate::Entity::find_by_id(venue.lessor_id)
+            .find_also_related(UserCrate::Entity)
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?
+            .ok_or(DatabaseError::DataNotFound)?;
+
+        let user = user.ok_or(DatabaseError::DataNotFound)?;
+        let user = db_user_to_domain_user(user)?;
+        let lessor = db_lessor_to_domain(user, lessor)?;
+        Ok(lessor)
+    }
+
+    async fn save_image_data(
+        &self,
+        images: Vec<VenueImage>,
+    ) -> Result<Vec<VenueImage>, DomainError> {
+        let mut res: Vec<VenueImageUri::Model> = vec![];
+        for item in images {
+            let image = venue_image_to_db(&item);
+            let image =
+                image.insert(self.database.deref()).await.map_err(|e| {
+                    log::error!("{}", e);
+                    DatabaseError::SaveEntityFail
+                })?;
+            res.push(image);
+        }
+        let images = res.iter().map(venue_image_to_domain).collect();
+        Ok(images)
+    }
+
+    async fn delete_images(
+        &self,
+        images: Vec<i64>,
+        venue_id: i64,
+    ) -> Result<(), DomainError> {
+        let res = VenueImageUri::Entity::find()
+            .filter(VenueImageUri::Column::VenueId.eq(venue_id))
+            .filter(VenueImageUri::Column::Id.is_in(images.clone()))
+            .all(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+        if res.len() < 1 {
+            return Err(DatabaseError::DataNotFound.into());
+        }
+        VenueImageUri::Entity::delete_many()
+            .filter(VenueImageUri::Column::Id.is_in(images))
+            .exec(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::DeleteEntityFail
+            })?;
+        Ok(())
     }
 }
