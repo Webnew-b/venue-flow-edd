@@ -16,10 +16,10 @@ use domain_core::{
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, LoaderTrait, PaginatorTrait,
-    QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType,
+    LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
+    QueryTrait,
 };
-use validator::ValidateLength;
 
 use crate::{
     database::entities::{
@@ -37,6 +37,16 @@ use crate::{
 };
 
 pub mod enum_converstion;
+
+#[derive(Debug, FromQueryResult)]
+struct VenueWithLessor {
+    pub venue_id: i64,
+    pub venue_name: String,
+    pub venue_address: String,
+    pub lessor_id: i64,
+    pub lessor_name: String,
+    pub lessor_avatar: String,
+}
 
 pub(crate) struct VenueService {
     database: Arc<DatabaseConnection>,
@@ -153,6 +163,38 @@ impl VenueRepository for VenueService {
         id: i64,
         page: PageLimit,
     ) -> Result<Vec<Venue>, DomainError> {
+        let venues = VenueCrate::Entity::find()
+            .filter(VenueCrate::Column::LessorId.eq(id))
+            .paginate(self.database.deref(), page.limit)
+            .fetch_page(page.page)
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+
+        let venue_with_images = venues
+            .load_many(VenueImageUri::Entity, self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+
+        let venues =
+            venues.into_iter().try_fold(Vec::new(), |mut acc, v| {
+                let images = venue_with_images
+                    .iter()
+                    .flatten()
+                    .filter(|t| t.venue_id == v.id)
+                    .cloned()
+                    .collect();
+                let item = db_venue_to_domain(v, images)?;
+                acc.push(item);
+                Ok::<Vec<Venue>, DomainError>(acc)
+            })?;
+
+        Ok(venues)
     }
 
     async fn find_venue_by_name(
@@ -237,6 +279,22 @@ impl VenueRepository for VenueService {
     ) -> Result<Vec<IndexVenue>, DomainError> {
         let venues = VenueCrate::Entity::find()
             .filter(VenueCrate::Column::State.eq(VenueState::Published))
+            .join(
+                JoinType::InnerJoin,
+                VenueCrate::Entity::belongs_to(LessorCrate::Entity).into(),
+            )
+            .join(
+                JoinType::InnerJoin,
+                LessorCrate::Entity::belongs_to(UserCrate::Entity).into(),
+            )
+            .select_only()
+            .column_as(VenueCrate::Column::Id, "venue_id")
+            .column_as(VenueCrate::Column::Name, "venue_name")
+            .column_as(VenueCrate::Column::Address, "venue_address")
+            .column_as(LessorCrate::Column::Id, "lessor_id")
+            .column_as(UserCrate::Column::Username, "lessor_name")
+            .column_as(UserCrate::Column::Avatar, "lessor_avatar")
+            .into_model::<VenueWithLessor>()
             .paginate(self.database.deref(), page.limit)
             .fetch_page(page.page)
             .await
@@ -244,7 +302,37 @@ impl VenueRepository for VenueService {
                 log::error!("{}", e);
                 DatabaseError::SelectFail
             })?;
-        let index_venues = venues.into_iter().map(|m| m).collect();
+        let venue_ids: Vec<i64> =
+            venues.iter().map(|i| i.venue_id.clone()).collect();
+        let images = VenueImageUri::Entity::find()
+            .filter(VenueImageUri::Column::VenueId.is_in(venue_ids))
+            .order_by_asc(VenueImageUri::Column::CreateTime)
+            .group_by(VenueImageUri::Column::VenueId)
+            .all(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                DatabaseError::SelectFail
+            })?;
+        let index_venues = venues
+            .into_iter()
+            .map(|m| {
+                let mut venue_image = String::new();
+                if let Some(image) =
+                    images.iter().find(|i| i.venue_id == m.venue_id)
+                {
+                    venue_image = image.uri.to_string();
+                }
+                IndexVenue {
+                    lessor_avatar: m.lessor_avatar,
+                    lessor_id: m.lessor_id,
+                    venue_name: m.venue_name,
+                    address: m.venue_address,
+                    venue_id: m.venue_id,
+                    venue_image,
+                }
+            })
+            .collect();
         Ok(index_venues)
     }
 
