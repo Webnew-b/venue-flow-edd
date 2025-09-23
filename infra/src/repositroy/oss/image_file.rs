@@ -1,112 +1,152 @@
-use std::fs::{self, File};
+use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::Client;
+use domain::domain_error::infra_error::InfraError;
+use domain::domain_error::DomainError;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use minio::s3::args::PutObjectArgs;
-use minio::s3::client::Client;
-
-
-pub struct ImagePath<'a>{
-    pub bucket_name:String,
-    pub image_path:&'a Path,
+pub struct ImagePath<'a> {
+    pub bucket_name: String,
+    pub image_path: &'a Path,
 }
 
-pub fn gen_uuid_image_name(ext:&str) -> String {
+pub fn gen_uuid_image_name(ext: &str) -> String {
     let id = uuid::Uuid::new_v4();
-    format!("image_{}.{}",id,ext)
+    format!("image_{}.{}", id, ext)
 }
 
-pub fn change_image_type(image_path:&Path,output:&Path)-> Result<(),io::Error> {
-    let img = image::open(image_path).map_err(|e|{
-        tracing::error!("{}",e.to_string());
-        io::Error::new(io::ErrorKind::InvalidData,"Could not open the image file.")
+pub fn change_image_type(
+    image_path: &Path,
+    output: &Path,
+) -> Result<(), io::Error> {
+    let img = image::open(image_path).map_err(|e| {
+        tracing::error!("Failed to open image: {}", e);
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Could not open the image file.",
+        )
     })?;
 
     img.save_with_format(output, image::ImageFormat::WebP)
-        .map_err(|e|{
-            tracing::error!("{}",e.to_string());
-            io::Error::new(io::ErrorKind::InvalidData,"Could not create the image file.")
+        .map_err(|e| {
+            tracing::error!("Failed to save image as WebP: {}", e);
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Could not create the WebP image file.",
+            )
         })
 }
 
-
-fn change_path_extension(source_path:&Path)-> io::Result<PathBuf> {
+fn change_path_extension(source_path: &Path) -> Result<PathBuf, DomainError> {
     let parent_path = match source_path.parent() {
-      Some(p) => p,
-      None => {
-          return Err(
-              io::Error::new(
-                  io::ErrorKind::InvalidData,
-                  "Could not get the parent path"
-                  )
-              );
-      }
+        Some(p) => p,
+        None => {
+            return Err(InfraError::FileNotFound.into());
+        },
     };
+
     let mut file_name = match source_path.file_stem() {
         Some(p) => p.to_string_lossy().to_string(),
         None => {
-          return Err(
-              io::Error::new(
-                  io::ErrorKind::InvalidData,
-                  "Could not get the file name"
-                  )
-              );
-      }
+            return Err(InfraError::FileNotRead.into());
+        },
     };
-    file_name.push_str(".webp");
 
+    file_name.push_str(".webp");
     Ok(parent_path.join(file_name))
 }
 
-pub async fn save_file_to_oss<'a>(client:&Client,path:ImagePath<'a>) -> Result<String,io::Error> {
+async fn upload_object(
+    client: &Client,
+    bucket: &str,
+    key: &str,
+    data: Vec<u8>,
+    content_type: Option<&str>,
+) -> Result<String, DomainError> {
+    let byte_stream = ByteStream::from(data);
+    let mut put_object = client
+        .put_object()
+        .bucket(bucket)
+        .key(key)
+        .body(byte_stream);
 
-    let output = change_path_extension(path.image_path)?;
+    // 设置 content-type（如果提供）
+    if let Some(ct) = content_type {
+        put_object = put_object.content_type(ct);
+    }
 
-    let _ = change_image_type(path.image_path, output.as_path());
+    let response = put_object.send().await.map_err(|e| {
+        tracing::error!("Failed to upload object to S3: {}", e);
+        InfraError::SaveImageFail
+    })?;
 
-    let file_stream = File::open(output.clone())?;
-    let file_meta = fs::metadata(output.clone())?;
-    let file_size = Some(file_meta.len() as usize);
-
-    let output_c = output.clone();
-    let file_name = match output_c.file_name(){
-        Some(e)=>e.to_string_lossy(),
-        None => {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not get the file name"));
-        }
-    };
-
-    let mut box_file_stream = Box::new(file_stream);
-
-    let mut po = PutObjectArgs::new(
-        &path.bucket_name, 
-        &file_name, 
-        &mut box_file_stream, 
-        file_size, 
-        None)
-        .map_err(|e|{
-            tracing::error!("{}",e.to_string());
-            io::Error::new(io::ErrorKind::Interrupted,"Fail to instructure the object args")
-        })?;
-
-    let _ = client.put_object(&mut po).await
-        .map_err(|e|{ 
-            tracing::error!("{}",e.to_string());
-            io::Error::new(io::ErrorKind::ConnectionAborted,"Fail to upload the file to oss")
-        })?;
-
-    let delete_cache_file = path.image_path.to_path_buf();
-    send2queue(delete_cache_file).await;
-    send2queue(output).await;
-        
-    Ok(file_name.to_string())
-
+    let etag = response.e_tag().unwrap_or("unknown").to_string();
+    tracing::info!("Object uploaded successfully: {} (ETag: {})", key, etag);
+    Ok(etag)
 }
 
-async fn send2queue(p:PathBuf) {
-    let queue = DETELE_FILE_QUEUE.clone();
-    let sender = &queue.0;
-    if let Err(e) = sender.send(p).await {
-        tracing::error!("{}",e.to_string());
+fn guess_content_type(path: &Path) -> &'static str {
+    match path.extension().and_then(|ext| ext.to_str()) {
+        Some("html") | Some("htm") => "text/html",
+        Some("css") => "text/css",
+        Some("js") => "application/javascript",
+        Some("json") => "application/json",
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("gif") => "image/gif",
+        Some("svg") => "image/svg+xml",
+        Some("webp") => "image/webp", // 添加 WebP 支持
+        Some("pdf") => "application/pdf",
+        Some("txt") => "text/plain",
+        Some("zip") => "application/zip",
+        _ => "application/octet-stream",
+    }
+}
+
+/// 创建临时 WebP 文件路径
+fn create_temp_webp_path() -> Result<PathBuf, DomainError> {
+    let temp_dir = std::env::temp_dir();
+    let uuid = uuid::Uuid::new_v4();
+    let temp_filename = format!("temp_image_{}.webp", uuid);
+    Ok(temp_dir.join(temp_filename))
+}
+
+pub async fn save_file_to_oss<'a>(
+    client: &Client,
+    path: ImagePath<'a>,
+) -> Result<String, DomainError> {
+    let temp_webp_path = create_temp_webp_path()?;
+
+    change_image_type(path.image_path, &temp_webp_path).map_err(|e| {
+        tracing::error!("Failed to convert image to WebP: {}", e);
+        InfraError::FileNotRead
+    })?;
+
+    let webp_data = tokio::fs::read(&temp_webp_path).await.map_err(|e| {
+        tracing::error!("Failed to read converted WebP file: {}", e);
+        InfraError::FileNotRead
+    })?;
+
+    let s3_key = gen_uuid_image_name("webp");
+
+    let result = upload_object(
+        client,
+        &path.bucket_name,
+        &s3_key,
+        webp_data,
+        Some("image/webp"),
+    )
+    .await;
+
+    send2queue(temp_webp_path).await;
+
+    result
+}
+
+async fn send2queue(p: PathBuf) {
+    if let Err(e) = tokio::fs::remove_file(&p).await {
+        tracing::warn!("Failed to remove temporary file {:?}: {}", p, e);
+    } else {
+        tracing::debug!("Successfully removed temporary file: {:?}", p);
     }
 }

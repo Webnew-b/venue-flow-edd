@@ -28,4 +28,7 @@ pub enum DomainUserError {
 
     #[error("Fail to generate token.")]
     InvalidTokenGeneration,
+
+    #[error("Password is incorrect.")]
+    PasswordIncorrect,
 }
