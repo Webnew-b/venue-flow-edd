@@ -1,18 +1,20 @@
 use chrono::{DateTime, Utc};
 
 use app::app_event::AppEvent;
-use app::use_case::rental::process_rental_request::{approve_rental_request, reject_rental_request};
+use app::use_case::rental::process_rental_request::{
+    approve_rental_request, reject_rental_request,
+};
 use app::AppUseCase;
 use domain_core::rental::{Rental, RentalBuilder, RentalStatus};
 use domain_core::user::organizer::{Organizer, OrganizerBuilder};
 use domain_core::user::{User, UserBuilder, UserGender};
 use domain_core::utils::Clock;
 
-use crate::common::{fake_email, fake_number, fake_username};
 use crate::common::rental_common::{mock_rental_setup, TestRentalMocks};
 use crate::common::user_common::{mock_user_setup, TestUserMocks};
+use crate::common::util_common::MockTime;
 use crate::common::venue_common::{mock_venue_setup, TestVenueMocks};
-use crate::common::util_common::{MockTime};
+use crate::common::{fake_email, fake_number, fake_username};
 
 mod common;
 
@@ -22,20 +24,32 @@ fn generate_mock_success_approve<'test_mock>(
     user_mock: &'test_mock mut TestUserMocks,
     rental: Rental,
     organizer: Organizer,
-) -> (&'test_mock TestRentalMocks, &'test_mock TestVenueMocks, &'test_mock TestUserMocks) {
-    rental_mock.repo.expect_find_rental_by_id()
+) -> (
+    &'test_mock TestRentalMocks,
+    &'test_mock TestVenueMocks,
+    &'test_mock TestUserMocks,
+) {
+    rental_mock
+        .repo
+        .expect_find_rental_by_id()
         .times(1)
         .return_once(move |_| Ok(rental));
 
-    user_mock.repo.expect_find_organizer_by_id()
+    user_mock
+        .repo
+        .expect_find_organizer_by_id()
         .times(1)
         .return_once(move |_| Ok(organizer));
 
-    venue_mock.repo.expect_is_venue_owned_by_lessor()
+    venue_mock
+        .repo
+        .expect_is_venue_owned_by_lessor()
         .times(1)
         .return_once(move |_, _| Ok(true));
 
-    rental_mock.repo.expect_save_rental()
+    rental_mock
+        .repo
+        .expect_save_rental()
         .times(1)
         .return_once(move |_| Ok(()));
 
@@ -48,20 +62,32 @@ fn generate_mock_success_reject<'test_mock>(
     user_mock: &'test_mock mut TestUserMocks,
     rental: Rental,
     organizer: Organizer,
-) -> (&'test_mock TestRentalMocks, &'test_mock TestVenueMocks, &'test_mock TestUserMocks) {
-    rental_mock.repo.expect_find_rental_by_id()
+) -> (
+    &'test_mock TestRentalMocks,
+    &'test_mock TestVenueMocks,
+    &'test_mock TestUserMocks,
+) {
+    rental_mock
+        .repo
+        .expect_find_rental_by_id()
         .times(1)
         .return_once(move |_| Ok(rental));
 
-    user_mock.repo.expect_find_organizer_by_id()
+    user_mock
+        .repo
+        .expect_find_organizer_by_id()
         .times(1)
         .return_once(move |_| Ok(organizer));
 
-    venue_mock.repo.expect_is_venue_owned_by_lessor()
+    venue_mock
+        .repo
+        .expect_is_venue_owned_by_lessor()
         .times(1)
         .return_once(move |_, _| Ok(true));
 
-    rental_mock.repo.expect_save_rental()
+    rental_mock
+        .repo
+        .expect_save_rental()
         .times(1)
         .return_once(move |_| Ok(()));
 
@@ -70,7 +96,7 @@ fn generate_mock_success_reject<'test_mock>(
 
 fn fake_user() -> User {
     let time = MockTime {};
-    
+
     UserBuilder::default()
         .id(Some(fake_number()))
         .username(fake_username())
@@ -80,27 +106,29 @@ fn fake_user() -> User {
         .gender(UserGender::Male)
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 fn fake_organizer() -> Organizer {
     let time = MockTime {};
     let user = fake_user();
-    
+
     OrganizerBuilder::default()
         .id(Some(fake_number()))
         .user(user)
         .phone("12345678901".to_string())
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 fn fake_rental() -> Rental {
     let time = MockTime {};
     let start_time: DateTime<Utc> = "2024-01-01T10:00:00Z".parse().unwrap();
     let end_time: DateTime<Utc> = "2024-01-01T12:00:00Z".parse().unwrap();
-    
+
     RentalBuilder::default()
         .id(Some(fake_number()))
         .activity_type("test".to_string())
@@ -111,7 +139,8 @@ fn fake_rental() -> Rental {
         .status(RentalStatus::Pending)
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -124,13 +153,13 @@ async fn test_approve_rental_request_success() {
     let organizer = fake_organizer();
     let rental_id = rental.id().unwrap();
     let lessor_id = fake_number();
-    
+
     let (rental_mock, venue_mock, user_mock) = generate_mock_success_approve(
-        &mut rental_mock, 
-        &mut venue_mock, 
-        &mut user_mock, 
-        rental, 
-        organizer.clone()
+        &mut rental_mock,
+        &mut venue_mock,
+        &mut user_mock,
+        rental,
+        organizer.clone(),
     );
 
     let rental_repo = &rental_mock.repo;
@@ -145,7 +174,8 @@ async fn test_approve_rental_request_success() {
         lessor_id,
         rental_id,
         &time,
-    ).await;
+    )
+    .await;
 
     match res {
         Ok(o) => {
@@ -154,7 +184,7 @@ async fn test_approve_rental_request_success() {
 
             assert_eq!(use_case, AppUseCase::ProcessRentalRequests);
             assert_eq!(events.len(), 2);
-            
+
             let expected_events = vec![
                 AppEvent::LogUseCase,
                 AppEvent::ApprovedRentalRequest {
@@ -179,13 +209,13 @@ async fn test_reject_rental_request_success() {
     let organizer = fake_organizer();
     let rental_id = rental.id().unwrap();
     let lessor_id = fake_number();
-    
+
     let (rental_mock, venue_mock, user_mock) = generate_mock_success_reject(
-        &mut rental_mock, 
-        &mut venue_mock, 
-        &mut user_mock, 
-        rental, 
-        organizer.clone()
+        &mut rental_mock,
+        &mut venue_mock,
+        &mut user_mock,
+        rental,
+        organizer.clone(),
     );
 
     let rental_repo = &rental_mock.repo;
@@ -200,7 +230,8 @@ async fn test_reject_rental_request_success() {
         lessor_id,
         rental_id,
         &time,
-    ).await;
+    )
+    .await;
 
     match res {
         Ok(o) => {
@@ -209,7 +240,7 @@ async fn test_reject_rental_request_success() {
 
             assert_eq!(use_case, AppUseCase::ProcessRentalRequests);
             assert_eq!(events.len(), 2);
-            
+
             let expected_events = vec![
                 AppEvent::LogUseCase,
                 AppEvent::RejectedRentalRequest {

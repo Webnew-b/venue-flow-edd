@@ -34,7 +34,10 @@ mod derive_get_tests {
 
         let y_ref_internal: &String = &p.y;
         let y_ref_getter: &String = p.y();
-        assert_eq!(y_ref_internal as *const String, y_ref_getter as *const String);
+        assert_eq!(
+            y_ref_internal as *const String,
+            y_ref_getter as *const String
+        );
     }
 
     // 测试元组结构体
@@ -127,5 +130,4 @@ mod derive_get_tests {
     // let b = Borrowed { reference: &text };
     // let _ref_ref_str: &&str = b.reference(); // 当前宏生成的类型
     // let _direct_ref_str: &str = b.reference;   // 期望的getter返回类型
-
 }

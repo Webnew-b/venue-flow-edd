@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Error,Debug)]
+#[derive(Error, Debug)]
 pub enum AppRentalError {
     #[error("The venue is not owned lessor.")]
     VenueNotOwnedLessor,

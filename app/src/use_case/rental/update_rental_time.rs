@@ -5,31 +5,23 @@ use domain_core::utils::Clock;
 use crate::app_error::{AppError, AppResult};
 use crate::{AppUseCase, Outcome};
 
-
-
 pub async fn reject_rental_request(
-    repo:&impl RentalRespository,
-    organizer_id:i64,
-    time_range:(DateTime<Utc>,DateTime<Utc>),
-    id:i64,
-    time:&impl Clock,
-    ) -> AppResult<Outcome<()>>{
-
+    repo: &impl RentalRespository,
+    organizer_id: i64,
+    time_range: (DateTime<Utc>, DateTime<Utc>),
+    id: i64,
+    time: &impl Clock,
+) -> AppResult<Outcome<()>> {
     let rental = repo.find_rental_by_id(id).await?;
 
-    let rental = rental.set_rental_date(
-        time,
-        time_range.0,
-        time_range.1,
-        organizer_id
-    ).map_err(|e|{
-        AppError::EntityInvalid { 
+    let rental = rental
+        .set_rental_date(time, time_range.0, time_range.1, organizer_id)
+        .map_err(|e| AppError::EntityInvalid {
             entity_type: "rental".to_string(),
-            cause: e.to_string()
-        }
-    })?;
+            cause: e.to_string(),
+        })?;
 
     repo.save_rental(rental).await?;
 
-    Ok(Outcome::new((),AppUseCase::UpdateRentalTime))
+    Ok(Outcome::new((), AppUseCase::UpdateRentalTime))
 }

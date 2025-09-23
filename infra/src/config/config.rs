@@ -2,7 +2,7 @@ use std::env;
 use std::str::FromStr;
 
 use dotenv::{dotenv, Error};
-use log::{log, Level,error};
+use log::{error, log, Level};
 
 use super::ConfigError;
 
@@ -25,13 +25,11 @@ impl FromStr for AppEnv {
     }
 }
 
-fn get_env_value_from_key(key:&str) -> Result<String,Error> {
+fn get_env_value_from_key(key: &str) -> Result<String, Error> {
     dotenv().ok();
     match env::var(key) {
         Ok(e) => Ok(e),
-        Err(e) => {
-            Err(Error::EnvVar(e))
-        }
+        Err(e) => Err(Error::EnvVar(e)),
     }
 }
 
@@ -107,9 +105,11 @@ pub fn get_redis_url() -> Result<String, ConfigError> {
     let addr_key = "REDIS_ADDR";
     let port_key = "REDIS_PORT";
 
-    let addr_res = get_env_value_from_key(addr_key).map_err(|e| gen_error(e, addr_key))?;
+    let addr_res =
+        get_env_value_from_key(addr_key).map_err(|e| gen_error(e, addr_key))?;
 
-    let port_res = get_env_value_from_key(port_key).map_err(|e| gen_error(e, port_key))?;
+    let port_res =
+        get_env_value_from_key(port_key).map_err(|e| gen_error(e, port_key))?;
 
     let url = format!("redis://{}:{}", addr_res, port_res);
 
@@ -128,8 +128,8 @@ pub fn get_env_type() -> Result<AppEnv, ConfigError> {
     Ok(value)
 }
 
-pub fn get_oss_fs()-> Result<super::OssConfig,ConfigError>{
-    let key_list:[&str;5] = [
+pub fn get_oss_fs() -> Result<super::OssConfig, ConfigError> {
+    let key_list: [&str; 5] = [
         "OSS_URL",
         "OSS_ACCESS_KEY",
         "OSS_SECRET_KEY",
@@ -138,8 +138,9 @@ pub fn get_oss_fs()-> Result<super::OssConfig,ConfigError>{
     ];
     let mut config = super::OssConfig::new();
     for item in key_list {
-        let env = get_env_value_from_key(item).map_err(|e| gen_error(e, item))?; 
-        let _ = &config.add_by_env_key(item,env.to_string());
+        let env =
+            get_env_value_from_key(item).map_err(|e| gen_error(e, item))?;
+        let _ = &config.add_by_env_key(item, env.to_string());
     }
     Ok(config)
 }
@@ -148,6 +149,6 @@ fn gen_error<E>(error: E, key: &str) -> ConfigError
 where
     E: std::error::Error + ToString,
 {
-    error!( "{}", error.to_string());
+    error!("{}", error.to_string());
     ConfigError::NotFound(key.to_owned())
 }

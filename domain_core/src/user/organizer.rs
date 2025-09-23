@@ -1,12 +1,12 @@
 use chrono::{DateTime, Utc};
-use garde::Validate;
 use derive_builder::Builder;
+use garde::Validate;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
 use crate::user::User;
 use crate::utils::Clock;
 
-#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate)]
+#[derive(Debug, Clone, Builder, PartialEq, Eq, Validate)]
 #[builder(
     pattern = "owned",
     build_fn(
@@ -16,36 +16,34 @@ use crate::utils::Clock;
     )
 )]
 pub struct Organizer {
-
     #[garde(skip)]
-    user:User,
+    user: User,
 
     #[builder(default)]
     #[garde(skip)]
-    id:Option<i64>,
+    id: Option<i64>,
 
     //todo Validate Phone numder is correct format, use custom derive
     #[garde(skip)]
-    phone:String,
+    phone: String,
 
     #[garde(skip)]
     #[builder(default = "false")]
-    is_delete:bool,
+    is_delete: bool,
 
     #[garde(skip)]
-    createtime:DateTime<Utc>,
+    createtime: DateTime<Utc>,
     #[garde(skip)]
-    updatetime:DateTime<Utc>,
+    updatetime: DateTime<Utc>,
 }
 
 impl Organizer {
-    
     pub fn set_id(mut self, id: Option<i64>) -> Self {
         self.id = id;
         self
     }
 
-    pub fn set_delete(mut self,time:&impl Clock) -> Self {
+    pub fn set_delete(mut self, time: &impl Clock) -> Self {
         self.is_delete = true;
         self.updatetime = time.now();
         self
@@ -82,18 +80,16 @@ impl Organizer {
     }
 }
 
-
 impl OrganizerBuilder {
-    fn validate_builder(&self) -> DomainCoreResult<()> { 
-        require_field!(self.user,"user");
-        require_field!(self.phone,"phone");
-        require_field!(self.createtime,"createtime");
-        require_field!(self.updatetime,"updatetime");
-        
+    fn validate_builder(&self) -> DomainCoreResult<()> {
+        require_field!(self.user, "user");
+        require_field!(self.phone, "phone");
+        require_field!(self.createtime, "createtime");
+        require_field!(self.updatetime, "updatetime");
+
         Ok(())
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -112,7 +108,9 @@ mod tests {
 
     impl MockClock {
         fn new(start_time: DateTime<Utc>) -> Self {
-            Self { current_time: start_time }
+            Self {
+                current_time: start_time,
+            }
         }
         fn advance(&mut self, duration: Duration) {
             self.current_time += duration;
@@ -139,7 +137,7 @@ mod tests {
             .build()
             .unwrap()
     }
-    
+
     /// Helper to create a valid OrganizerBuilder for tests.
     fn create_test_organizer_builder() -> OrganizerBuilder {
         let now = Utc.with_ymd_and_hms(2025, 6, 13, 12, 0, 0).unwrap();
@@ -170,15 +168,19 @@ mod tests {
         let mut builder = create_test_organizer_builder();
         builder.user = None;
         let result = builder.build();
-        assert!(matches!(result, Err(DomainCoreError::MissingField(field)) if field == "user"));
+        assert!(
+            matches!(result, Err(DomainCoreError::MissingField(field)) if field == "user")
+        );
     }
-    
+
     #[test]
     fn test_build_organizer_fail_missing_phone() {
         let mut builder = create_test_organizer_builder();
         builder.phone = None;
         let result = builder.build();
-        assert!(matches!(result, Err(DomainCoreError::MissingField(field)) if field == "phone"));
+        assert!(
+            matches!(result, Err(DomainCoreError::MissingField(field)) if field == "phone")
+        );
     }
 
     // --- Entity Method Tests ---
@@ -187,7 +189,7 @@ mod tests {
     fn test_set_id() {
         let organizer = create_test_organizer_builder().build().unwrap();
         assert_eq!(organizer.id(), None);
-        
+
         let organizer_with_id = organizer.set_id(Some(101));
         assert_eq!(organizer_with_id.id(), Some(101));
     }
@@ -205,7 +207,7 @@ mod tests {
 
         // Advance the clock to a new, known time
         clock.advance(Duration::minutes(5));
-        
+
         let deleted_organizer = organizer.set_delete(&clock);
 
         assert!(deleted_organizer.is_delete());
@@ -226,21 +228,24 @@ mod tests {
             .createtime(now)
             .build()
             .unwrap();
-        
+
         assert_eq!(organizer.id(), Some(99));
         assert_eq!(organizer.phone(), "555-1234");
         assert_eq!(organizer.user(), &user);
         assert_eq!(organizer.createtime(), now);
         assert_eq!(organizer.updatetime(), now);
-        
+
         // Test user_mut by actually mutating the user
         let mut mutable_organizer = organizer.clone();
         let user_ref_mut = mutable_organizer.user_mut();
-        
+
         // Since User methods now take a Clock, we need one here to test a state change
         let clock = MockClock::new(now);
         *user_ref_mut = user_ref_mut.clone().ban_user(&clock);
 
-        assert_eq!(mutable_organizer.user().status(), &crate::user::UserStatus::Ban);
+        assert_eq!(
+            mutable_organizer.user().status(),
+            &crate::user::UserStatus::Ban
+        );
     }
 }

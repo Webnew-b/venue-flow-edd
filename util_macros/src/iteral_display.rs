@@ -2,7 +2,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
-pub fn derive_impl(input:TokenStream) -> TokenStream {
+pub fn derive_impl(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
 
     let name = &ast.ident;
@@ -15,10 +15,8 @@ pub fn derive_impl(input:TokenStream) -> TokenStream {
             )
             .into_compile_error()
             .into();
-        }
-        Data::Enum(data) => {
-            data
         },
+        Data::Enum(data) => data,
         Data::Union(_) => {
             return syn::Error::new_spanned(
                 &name, 
@@ -29,33 +27,36 @@ pub fn derive_impl(input:TokenStream) -> TokenStream {
         },
     };
 
+    let match_arms: Vec<_> = data
+        .variants
+        .iter()
+        .map(|variant| {
+            let variant_name = &variant.ident;
+            let event_type_str = variant_name
+                .to_string()
+                .chars()
+                .enumerate()
+                .fold(String::new(), |mut acc, (i, c)| {
+                    if i > 0 && c.is_uppercase() {
+                        acc.push('_');
+                    }
+                    acc.push(c.to_ascii_lowercase());
+                    acc
+                });
 
-    let match_arms:Vec<_> = data.variants.iter().map(|variant| {
-        let variant_name = &variant.ident;
-        let event_type_str = variant_name.to_string()
-            .chars()
-            .enumerate()
-            .fold(String::new(), |mut acc, (i, c)| {
-                if i > 0 && c.is_uppercase() {
-                    acc.push('_');
-                }
-                acc.push(c.to_ascii_lowercase());
-                acc
-            });
-        
-        match &variant.fields {
-            Fields::Named(_) => {
-                quote! { Self::#variant_name { .. } => #event_type_str, }
+            match &variant.fields {
+                Fields::Named(_) => {
+                    quote! { Self::#variant_name { .. } => #event_type_str, }
+                },
+                Fields::Unnamed(_) => {
+                    quote! { Self::#variant_name(..) => #event_type_str, }
+                },
+                Fields::Unit => {
+                    quote! { Self::#variant_name => #event_type_str, }
+                },
             }
-            Fields::Unnamed(_) => {
-                quote! { Self::#variant_name(..) => #event_type_str, }
-            }
-            Fields::Unit => {
-                quote! { Self::#variant_name => #event_type_str, }
-            }
-        }
-    }).collect();
-    
+        })
+        .collect();
 
     let expanded = quote! {
         impl #name {

@@ -14,7 +14,8 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
-        db.execute_unprepared(r#"DROP TYPE IF EXISTS "user_gender";"#).await?;
+        db.execute_unprepared(r#"DROP TYPE IF EXISTS "user_gender";"#)
+            .await?;
         Ok(())
     }
 }

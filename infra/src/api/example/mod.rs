@@ -8,18 +8,13 @@ use crate::api::middleware::encrypt::encrypt_middleware;
 use crate::api::CustomResponse;
 use crate::web::app_state::AppState;
 
-
 pub fn router(cfg: &mut web::ServiceConfig) {
     let m = from_fn(encrypt_middleware);
     cfg.service(
         web::scope("/example")
             .service(example_database)
             .service(example_database2)
-            .service(
-                web::scope("")
-                .wrap(m)
-                .service(index)
-                )
+            .service(web::scope("").wrap(m).service(index)),
     );
 }
 
@@ -81,5 +76,3 @@ pub async fn example_database2(state: web::Data<AppState>) -> impl Responder {
     let res = CustomResponse::<()>::success(None);
     HttpResponse::Ok().json(res)
 }
-
-

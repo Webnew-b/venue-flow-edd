@@ -7,9 +7,9 @@ use app::AppUseCase;
 use domain_core::rental::{Rental, RentalBuilder, RentalStatus};
 use domain_core::utils::Clock;
 
-use crate::common::{fake_number};
+use crate::common::fake_number;
 use crate::common::rental_common::{mock_rental_setup, TestRentalMocks};
-use crate::common::util_common::{MockTime};
+use crate::common::util_common::MockTime;
 
 mod common;
 
@@ -17,7 +17,9 @@ fn generate_mock_success<'test_mock>(
     rental_mock: &'test_mock mut TestRentalMocks,
     rental: Rental,
 ) -> &'test_mock TestRentalMocks {
-    rental_mock.repo.expect_create_rental_request()
+    rental_mock
+        .repo
+        .expect_create_rental_request()
         .times(1)
         .return_once(move |_| Ok(rental));
 
@@ -28,7 +30,7 @@ fn fake_rental() -> Rental {
     let time = MockTime {};
     let start_time: DateTime<Utc> = "2024-01-01T10:00:00Z".parse().unwrap();
     let end_time: DateTime<Utc> = "2024-01-01T12:00:00Z".parse().unwrap();
-    
+
     RentalBuilder::default()
         .id(Some(fake_number()))
         .activity_type("test".to_string())
@@ -39,7 +41,8 @@ fn fake_rental() -> Rental {
         .status(RentalStatus::Pending)
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -50,7 +53,7 @@ async fn test_create_rental_request_success() {
     let organizer_id = rental.organizer_id().clone();
     let start_time = rental.start_time().clone();
     let end_time = rental.end_time().clone();
-    
+
     let rental_mock = generate_mock_success(&mut rental_mock, rental.clone());
 
     let repo = &rental_mock.repo;
@@ -65,11 +68,7 @@ async fn test_create_rental_request_success() {
         request_comments: Some("Test rental request".to_string()),
     };
 
-    let res = create_rental_request(
-        repo,
-        &time,
-        create_command,
-    ).await;
+    let res = create_rental_request(repo, &time, create_command).await;
 
     match res {
         Ok(o) => {
@@ -84,8 +83,14 @@ async fn test_create_rental_request_success() {
             assert_eq!(data.id, rental.id().unwrap());
             assert_eq!(data.venue_id, rental.venue_id().clone());
             assert_eq!(data.organizer_id, rental.organizer_id().clone());
-            assert_eq!(data.start_time, rental.start_time().format("%Y-%m-%d %H:%M:%S").to_string());
-            assert_eq!(data.end_time, rental.end_time().format("%Y-%m-%d %H:%M:%S").to_string());
+            assert_eq!(
+                data.start_time,
+                rental.start_time().format("%Y-%m-%d %H:%M:%S").to_string()
+            );
+            assert_eq!(
+                data.end_time,
+                rental.end_time().format("%Y-%m-%d %H:%M:%S").to_string()
+            );
         },
         Err(e) => panic!("Unexpected error: {}", e),
     }

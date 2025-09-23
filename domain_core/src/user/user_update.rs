@@ -5,28 +5,26 @@ use crate::user::user_error::UserError;
 
 use super::UserGender;
 
-
-#[derive(Debug,Clone,PartialEq,Eq,Default,Validate)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Validate)]
 pub struct UserUpdate {
-    #[garde(length(min = 5,max = 200))]
-    pub username:Option<String>,
+    #[garde(length(min = 5, max = 200))]
+    pub username: Option<String>,
 
     #[garde(email)]
-    pub email:Option<String>,
+    pub email: Option<String>,
 
-    #[garde(length(min = 8,max = 50))]
-    pub password:Option<String>,
+    #[garde(length(min = 8, max = 50))]
+    pub password: Option<String>,
 
     #[garde(url)]
-    pub avatar:Option<String>,
+    pub avatar: Option<String>,
 
-    #[garde(length(min = 6,max = 200))]
-    pub introduce:Option<String>,
+    #[garde(length(min = 6, max = 200))]
+    pub introduce: Option<String>,
 
     #[garde(skip)]
-    pub gender:Option<UserGender>,
+    pub gender: Option<UserGender>,
 }
-
 
 impl UserUpdate {
     pub fn new() -> Self {
@@ -34,24 +32,24 @@ impl UserUpdate {
     }
     pub fn is_empty(&self) -> bool {
         self.username.is_none()
-        && self.email.is_none()
-        && self.password.is_none()
-        && self.avatar.is_none()
-        && self.introduce.is_none()
-        && self.gender.is_none()
+            && self.email.is_none()
+            && self.password.is_none()
+            && self.avatar.is_none()
+            && self.introduce.is_none()
+            && self.gender.is_none()
     }
 
-    pub fn valid_update(&self)
-        -> DomainCoreResult<()>
-    {
+    pub fn valid_update(&self) -> DomainCoreResult<()> {
         if self.is_empty() {
             return Err(DomainCoreError::MustIncludeFieldForUpdate);
         }
 
         if let Err(e) = self.validate() {
             let mut err_msg = String::new();
-            for (path,errors) in e.iter(){
-                err_msg.push_str(format!("{}:{};",path,errors.message()).as_str());
+            for (path, errors) in e.iter() {
+                err_msg.push_str(
+                    format!("{}:{};", path, errors.message()).as_str(),
+                );
             }
 
             if !err_msg.is_empty() {
@@ -59,7 +57,6 @@ impl UserUpdate {
             }
         }
 
-        
         Ok(())
     }
 }
@@ -97,7 +94,10 @@ mod tests {
         let update = UserUpdate::new();
         let result = update.valid_update();
 
-        assert!(matches!(result, Err(DomainCoreError::MustIncludeFieldForUpdate)));
+        assert!(matches!(
+            result,
+            Err(DomainCoreError::MustIncludeFieldForUpdate)
+        ));
     }
 
     #[test]
@@ -129,7 +129,10 @@ mod tests {
             ..Default::default()
         };
         let result = update.valid_update();
-        assert!(matches!(result, Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))));
+        assert!(matches!(
+            result,
+            Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))
+        ));
     }
 
     #[test]
@@ -139,7 +142,10 @@ mod tests {
             ..Default::default()
         };
         let result = update.valid_update();
-        assert!(matches!(result, Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))));
+        assert!(matches!(
+            result,
+            Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))
+        ));
     }
 
     #[test]
@@ -149,7 +155,10 @@ mod tests {
             ..Default::default()
         };
         let result = update.valid_update();
-        assert!(matches!(result, Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))));
+        assert!(matches!(
+            result,
+            Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))
+        ));
     }
 
     #[test]
@@ -159,7 +168,10 @@ mod tests {
             ..Default::default()
         };
         let result = update.valid_update();
-        assert!(matches!(result, Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))));
+        assert!(matches!(
+            result,
+            Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))
+        ));
     }
 
     #[test]
@@ -169,9 +181,12 @@ mod tests {
             ..Default::default()
         };
         let result = update.valid_update();
-        assert!(matches!(result, Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))));
+        assert!(matches!(
+            result,
+            Err(DomainCoreError::UserError(UserError::FieldValidatedFail(_)))
+        ));
     }
-    
+
     #[test]
     fn test_error_message_contains_path_and_message() {
         let update = UserUpdate {
@@ -179,10 +194,19 @@ mod tests {
             ..Default::default()
         };
         let result = update.valid_update();
-        
-        if let Err(DomainCoreError::UserError(UserError::FieldValidatedFail(msg))) = result {
-            assert!(msg.contains("email:"), "Error message should contain the field path 'email'");
-            assert!(msg.contains("not a valid email"), "Error message should contain the validation error");
+
+        if let Err(DomainCoreError::UserError(UserError::FieldValidatedFail(
+            msg,
+        ))) = result
+        {
+            assert!(
+                msg.contains("email:"),
+                "Error message should contain the field path 'email'"
+            );
+            assert!(
+                msg.contains("not a valid email"),
+                "Error message should contain the validation error"
+            );
         } else {
             panic!("Expected FieldValidatedFail error");
         }

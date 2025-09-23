@@ -1,4 +1,4 @@
-use domain::user_domain::{ UserRepository, UserValidation};
+use domain::user_domain::{UserRepository, UserValidation};
 use domain::util_trait::{ImageRepository, PasswordHasher};
 use domain_core::user::user_update::UserUpdate;
 use domain_core::user::UserGender;
@@ -10,13 +10,11 @@ use crate::commands::user_commands::UpdateUserCommand;
 use crate::{AppUseCase, Outcome};
 
 async fn get_update_struct<'image>(
-    update:UpdateUserCommand<'image>,
-    validator:&impl UserValidation,
-    image_repo:&impl ImageRepository,
-    password_hasher:&impl PasswordHasher
-    )
-    -> AppResult<UserUpdate> {
-    
+    update: UpdateUserCommand<'image>,
+    validator: &impl UserValidation,
+    image_repo: &impl ImageRepository,
+    password_hasher: &impl PasswordHasher,
+) -> AppResult<UserUpdate> {
     let mut update_struct = UserUpdate::new();
 
     if let Some(g) = update.gender {
@@ -30,12 +28,12 @@ async fn get_update_struct<'image>(
         update_struct.avatar = Some(image);
     }
 
-    if let Some(u) = update.username{
+    if let Some(u) = update.username {
         validator.valid_username(u.as_str()).await?;
         update_struct.username = Some(u);
     }
 
-    if let Some(e) = update.email{
+    if let Some(e) = update.email {
         //todo verify email and send event
         validator.valid_email(e.as_str()).await?;
         update_struct.email = Some(e);
@@ -47,39 +45,36 @@ async fn get_update_struct<'image>(
     }
     update_struct.introduce = update.introduce;
 
-    update_struct.valid_update().map_err(|e|{
-        AppError::UpdateEntityFailed {
-            entity_type:"user".to_string(),
-            message: e.to_string(), 
-            source:e
-        }
-    })?;
+    update_struct
+        .valid_update()
+        .map_err(|e| AppError::UpdateEntityFailed {
+            entity_type: "user".to_string(),
+            message: e.to_string(),
+            source: e,
+        })?;
     Ok(update_struct)
 }
 
 pub async fn update_user<'image>(
-    repo:&impl UserRepository,
-    validator:&impl UserValidation,
-    update:UpdateUserCommand<'image>,
-    image_repo:&impl ImageRepository,
-    password_hasher:&impl PasswordHasher,
-    clock:&impl Clock,
-    )-> AppResult<Outcome<()>> {
+    repo: &impl UserRepository,
+    validator: &impl UserValidation,
+    update: UpdateUserCommand<'image>,
+    image_repo: &impl ImageRepository,
+    password_hasher: &impl PasswordHasher,
+    clock: &impl Clock,
+) -> AppResult<Outcome<()>> {
     let id = update.id;
-    let update_struct = get_update_struct(
-        update,
-        validator,
-        image_repo,
-        password_hasher
-    ).await?;
+    let update_struct =
+        get_update_struct(update, validator, image_repo, password_hasher)
+            .await?;
     let user = repo.find_user_by_id(id).await?;
-    let user = user.update_user(update_struct,clock).map_err(|e|{
+    let user = user.update_user(update_struct, clock).map_err(|e| {
         AppError::UpdateEntityFailed {
-            entity_type:"user".to_string(),
-            message: e.to_string(), 
-            source:e
+            entity_type: "user".to_string(),
+            message: e.to_string(),
+            source: e,
         }
     })?;
     repo.save_user(user).await?;
-    Ok(Outcome::new((),AppUseCase::BasicUserProfile))
+    Ok(Outcome::new((), AppUseCase::BasicUserProfile))
 }

@@ -5,12 +5,12 @@ use app::commands::venue_commands::{UpdateVenueCommand, VenueImageCommand};
 use app::use_case::venue::update_venue::update_venue;
 use app::AppUseCase;
 use domain_core::utils::Clock;
-use domain_core::venue::{Venue, VenueBuilder};
 use domain_core::venue::venue_image::VenueImage;
+use domain_core::venue::{Venue, VenueBuilder};
 
-use crate::common::{fake_address, fake_name, fake_number, fake_number_i32};
+use crate::common::util_common::{mock_utils_setup, MockTime, TestUtilMock};
 use crate::common::venue_common::{mock_venue_setup, TestVenueMocks};
-use crate::common::util_common::{mock_utils_setup,  MockTime, TestUtilMock};
+use crate::common::{fake_address, fake_name, fake_number, fake_number_i32};
 
 mod common;
 
@@ -18,11 +18,15 @@ fn generate_mock_success<'test_mock>(
     venue_mock: &'test_mock mut TestVenueMocks,
     venue: Venue,
 ) -> &'test_mock TestVenueMocks {
-    venue_mock.repo.expect_find_venue_by_id()
+    venue_mock
+        .repo
+        .expect_find_venue_by_id()
         .times(1)
         .return_once(move |_| Ok(venue));
 
-    venue_mock.repo.expect_save_venue()
+    venue_mock
+        .repo
+        .expect_save_venue()
         .times(1)
         .return_once(move |_| Ok(()));
 
@@ -30,28 +34,24 @@ fn generate_mock_success<'test_mock>(
 }
 
 fn create_fake_util<'test_mock>(
-    mock: &'test_mock mut TestUtilMock
+    mock: &'test_mock mut TestUtilMock,
 ) -> &'test_mock TestUtilMock {
-    mock.image_repo
-        .expect_upload_image()
-        .returning(|e| {
-            let url = e.to_str().unwrap().to_string();
-            let url = format!("https://www.test.com{}", url);
-            Ok(url)
-        });
+    mock.image_repo.expect_upload_image().returning(|e| {
+        let url = e.to_str().unwrap().to_string();
+        let url = format!("https://www.test.com{}", url);
+        Ok(url)
+    });
     mock
 }
 
 fn fake_venue() -> Venue {
     let time = MockTime {};
-    
-    let images = vec![
-        VenueImage {
-            title: "Original Image".to_string(),
-            uri: "https://www.test.com/original.jpg".to_string(),
-            comment: Some("Original comment".to_string()),
-        }
-    ];
+
+    let images = vec![VenueImage {
+        title: "Original Image".to_string(),
+        uri: "https://www.test.com/original.jpg".to_string(),
+        comment: Some("Original comment".to_string()),
+    }];
 
     VenueBuilder::default()
         .id(Some(fake_number()))
@@ -63,7 +63,8 @@ fn fake_venue() -> Venue {
         .description(Some("Original venue description".to_string()))
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -73,7 +74,7 @@ async fn test_update_venue_success() {
 
     let venue = fake_venue();
     let venue_id = venue.id().unwrap();
-    
+
     let venue_mock = generate_mock_success(&mut venue_mock, venue);
     let util_mock = create_fake_util(&mut util_mock);
 
@@ -94,7 +95,7 @@ async fn test_update_venue_success() {
             title: "Updated Image 2".to_string(),
             image: path2,
             comment: None,
-        }
+        },
     ];
 
     let update_command = UpdateVenueCommand {
@@ -106,12 +107,7 @@ async fn test_update_venue_success() {
         description: Some("Updated venue description".to_string()),
     };
 
-    let res = update_venue(
-        repo,
-        image_repo,
-        update_command,
-        &time,
-    ).await;
+    let res = update_venue(repo, image_repo, update_command, &time).await;
 
     match res {
         Ok(o) => {

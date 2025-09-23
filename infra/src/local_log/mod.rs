@@ -43,7 +43,7 @@ pub fn init_logger() -> Result<(), Error> {
 }
 
 fn init_production_log() -> Result<(), Error> {
-    let main_log = create_file("app.log");//todo 配置问题
+    let main_log = create_file("app.log"); //todo 配置问题
     let sql_log = create_file("sql.log");
 
     let (main_non_b, main_guard) = tracing_appender::non_blocking(main_log);

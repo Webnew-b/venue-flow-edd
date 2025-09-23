@@ -5,15 +5,14 @@ use crate::app_error::rental_error::AppRentalError;
 use crate::app_error::user_error::AppUserError;
 use crate::app_error::venue_error::AppVenueError;
 
+pub mod rental_error;
 pub mod user_error;
 pub mod venue_error;
-pub mod rental_error;
 
-pub type AppResult<T> = std::result::Result<T,AppError>;
+pub type AppResult<T> = std::result::Result<T, AppError>;
 
-#[derive(Debug,Error)]
+#[derive(Debug, Error)]
 pub enum AppError {
-
     #[error(transparent)]
     DomainError(#[from] DomainError),
 
@@ -27,29 +26,24 @@ pub enum AppError {
     AppVenueError(#[from] AppVenueError),
 
     #[error("The {entity_type} is illegal,cause:{cause}")]
-    EntityInvalid{
-        entity_type:String,
-        cause:String
-    },
+    EntityInvalid { entity_type: String, cause: String },
     #[error("The {0} id should be existed.")]
     IdInexisted(String),
     #[error("Could not create {entity_type} entity,cause:{message}")]
     CreateEntityFailed {
-        entity_type:String,
-        message:String,
+        entity_type: String,
+        message: String,
         #[source]
-        source:domain_core::domain_core_error::DomainCoreError,
+        source: domain_core::domain_core_error::DomainCoreError,
     },
     #[error("Could not update {entity_type} entity,cause:{message}")]
     UpdateEntityFailed {
-        entity_type:String,
-        message:String,
+        entity_type: String,
+        message: String,
         #[source]
-        source:domain_core::domain_core_error::DomainCoreError,
+        source: domain_core::domain_core_error::DomainCoreError,
     },
 
     #[error("Other error:{0}")]
-    Other(String)
+    Other(String),
 }
-
-

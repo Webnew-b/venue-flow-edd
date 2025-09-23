@@ -8,7 +8,8 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
         let db = manager.get_connection();
-        db.execute_unprepared(r#"
+        db.execute_unprepared(
+            r#"
         ALTER TABLE "organizer"
         ADD CONSTRAINT fk_user_to_organizer
         FOREIGN KEY (user_id) 
@@ -16,13 +17,18 @@ impl MigrationTrait for Migration {
         ON UPDATE CASCADE
 ON DELETE CASCADE
 ;
-        "#).await?;
+        "#,
+        )
+        .await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
-        db.execute_unprepared(r#"ALTER TABLE "organizer" DROP CONSTRAINT fk_user_to_organizer;"#).await?;
+        db.execute_unprepared(
+            r#"ALTER TABLE "organizer" DROP CONSTRAINT fk_user_to_organizer;"#,
+        )
+        .await?;
         Ok(())
     }
 }

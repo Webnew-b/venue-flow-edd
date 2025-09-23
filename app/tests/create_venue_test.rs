@@ -7,13 +7,16 @@ use app::AppUseCase;
 use domain_core::user::lessor::{Lessor, LessorBuilder};
 use domain_core::user::{User, UserBuilder, UserGender};
 use domain_core::utils::Clock;
-use domain_core::venue::{Venue, VenueBuilder};
 use domain_core::venue::venue_image::VenueImage;
+use domain_core::venue::{Venue, VenueBuilder};
 
-use crate::common::{fake_address, fake_email, fake_name, fake_number, fake_number_i32, fake_username};
 use crate::common::user_common::{mock_user_setup, TestUserMocks};
-use crate::common::venue_common::{mock_venue_setup, TestVenueMocks};
 use crate::common::util_common::{mock_utils_setup, MockTime, TestUtilMock};
+use crate::common::venue_common::{mock_venue_setup, TestVenueMocks};
+use crate::common::{
+    fake_address, fake_email, fake_name, fake_number, fake_number_i32,
+    fake_username,
+};
 
 mod common;
 
@@ -23,11 +26,15 @@ fn generate_mock_success<'test_mock>(
     lessor: Lessor,
     venue: Venue,
 ) -> (&'test_mock TestUserMocks, &'test_mock TestVenueMocks) {
-    user_mock.repo.expect_find_lessor_by_user_id()
+    user_mock
+        .repo
+        .expect_find_lessor_by_user_id()
         .times(1)
         .return_once(move |_| Ok(lessor));
 
-    venue_mock.repo.expect_create_venue()
+    venue_mock
+        .repo
+        .expect_create_venue()
         .times(1)
         .return_once(move |_| Ok(venue));
 
@@ -35,21 +42,19 @@ fn generate_mock_success<'test_mock>(
 }
 
 fn create_fake_util<'test_mock>(
-    mock: &'test_mock mut TestUtilMock
+    mock: &'test_mock mut TestUtilMock,
 ) -> &'test_mock TestUtilMock {
-    mock.image_repo
-        .expect_upload_image()
-        .returning(|e| {
-            let url = e.to_str().unwrap().to_string();
-            let url = format!("https://www.test.com{}", url);
-            Ok(url)
-        });
+    mock.image_repo.expect_upload_image().returning(|e| {
+        let url = e.to_str().unwrap().to_string();
+        let url = format!("https://www.test.com{}", url);
+        Ok(url)
+    });
     mock
 }
 
 fn fake_user_for_lessor() -> User {
     let time = MockTime {};
-    
+
     UserBuilder::default()
         .id(Some(1))
         .username(fake_username())
@@ -59,24 +64,26 @@ fn fake_user_for_lessor() -> User {
         .gender(UserGender::Male)
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 fn fake_lessor() -> Lessor {
     let time = MockTime {};
-    
+
     LessorBuilder::default()
         .id(Some(1))
         .user(fake_user_for_lessor())
         .phone("12345678901".to_string())
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 fn fake_venue() -> Venue {
     let time = MockTime {};
-    
+
     let images = vec![
         VenueImage {
             title: "Test Image 1".to_string(),
@@ -87,7 +94,7 @@ fn fake_venue() -> Venue {
             title: "Test Image 2".to_string(),
             uri: "https://www.test.com/test2.jpg".to_string(),
             comment: None,
-        }
+        },
     ];
 
     VenueBuilder::default()
@@ -100,7 +107,8 @@ fn fake_venue() -> Venue {
         .description(Some("Test venue description".to_string()))
         .createtime(time.now())
         .updatetime(time.now())
-        .build().unwrap()
+        .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -111,12 +119,12 @@ async fn test_create_venue_success() {
 
     let lessor = fake_lessor();
     let venue = fake_venue();
-    
+
     let (user_mock, venue_mock) = generate_mock_success(
-        &mut user_mock, 
-        &mut venue_mock, 
-        lessor.clone(), 
-        venue.clone()
+        &mut user_mock,
+        &mut venue_mock,
+        lessor.clone(),
+        venue.clone(),
     );
     let util_mock = create_fake_util(&mut util_mock);
 
@@ -138,7 +146,7 @@ async fn test_create_venue_success() {
             title: "Test Image 2".to_string(),
             image: path2,
             comment: None,
-        }
+        },
     ];
 
     let create_command = CreateVenueCommand {
@@ -150,13 +158,9 @@ async fn test_create_venue_success() {
         description: venue.description().clone(),
     };
 
-    let res = create_venue(
-        user_repo,
-        venue_repo,
-        image_repo,
-        create_command,
-        &time,
-    ).await;
+    let res =
+        create_venue(user_repo, venue_repo, image_repo, create_command, &time)
+            .await;
 
     match res {
         Ok(o) => {

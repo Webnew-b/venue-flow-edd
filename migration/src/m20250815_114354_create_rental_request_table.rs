@@ -8,7 +8,8 @@ impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         // Replace the sample below with your own migration scripts
         let db = manager.get_connection();
-        db.execute_unprepared(r#"CREATE TABLE IF NOT EXISTS "rental_request" (
+        db.execute_unprepared(
+            r#"CREATE TABLE IF NOT EXISTS "rental_request" (
 id BIGSERIAL PRIMARY KEY,
 organizer_id BIGSERIAL NOT NULL,
 venue_id BIGSERIAL NOT NULL,
@@ -19,13 +20,16 @@ request_comments text NOT NULL,
 status request_status NOT NULL DEFAULT 'pending',
 createTime timestamp NOT NULL DEFAULT now(),
 updateTime timestamp NOT NULL
-);"#).await?;
+);"#,
+        )
+        .await?;
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let db = manager.get_connection();
-        db.execute_unprepared(r#"DROP TABLE IF EXISTS "rental_request""#).await?;
+        db.execute_unprepared(r#"DROP TABLE IF EXISTS "rental_request""#)
+            .await?;
         Ok(())
     }
 }

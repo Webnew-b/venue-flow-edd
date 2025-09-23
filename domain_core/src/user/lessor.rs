@@ -1,13 +1,13 @@
 use chrono::{DateTime, Utc};
-use garde::Validate;
 use derive_builder::Builder;
+use garde::Validate;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
 use crate::utils::Clock;
 
 use super::User;
 
-#[derive(Debug,Clone,Builder,PartialEq,Eq,Validate)]
+#[derive(Debug, Clone, Builder, PartialEq, Eq, Validate)]
 #[builder(
     pattern = "owned",
     build_fn(
@@ -17,36 +17,34 @@ use super::User;
     )
 )]
 pub struct Lessor {
-
     #[garde(skip)]
-    user:User,
+    user: User,
 
     #[builder(default)]
     #[garde(skip)]
-    id:Option<i64>,
+    id: Option<i64>,
 
     //todo Validate Phone numder is correct format, use custom derive
     #[garde(skip)]
-    phone:String,
+    phone: String,
 
     #[garde(skip)]
     #[builder(default = "false")]
-    is_delete:bool,
+    is_delete: bool,
 
     #[garde(skip)]
-    createtime:DateTime<Utc>,
+    createtime: DateTime<Utc>,
     #[garde(skip)]
-    updatetime:DateTime<Utc>,
+    updatetime: DateTime<Utc>,
 }
 
 impl Lessor {
-    
     pub fn set_id(mut self, id: Option<i64>) -> Self {
         self.id = id;
         self
     }
 
-    pub fn set_delete(mut self,time:&impl Clock) -> Self {
+    pub fn set_delete(mut self, time: &impl Clock) -> Self {
         self.is_delete = true;
         self.updatetime = time.now();
         self
@@ -83,18 +81,16 @@ impl Lessor {
     }
 }
 
-
 impl LessorBuilder {
-    fn validate_builder(&self) -> DomainCoreResult<()> { 
-        require_field!(self.user,"user");
-        require_field!(self.phone,"phone");
-        require_field!(self.createtime,"createtime");
-        require_field!(self.updatetime,"updatetime");
-        
+    fn validate_builder(&self) -> DomainCoreResult<()> {
+        require_field!(self.user, "user");
+        require_field!(self.phone, "phone");
+        require_field!(self.createtime, "createtime");
+        require_field!(self.updatetime, "updatetime");
+
         Ok(())
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -113,7 +109,9 @@ mod tests {
 
     impl MockClock {
         fn new(start_time: DateTime<Utc>) -> Self {
-            Self { current_time: start_time }
+            Self {
+                current_time: start_time,
+            }
         }
         fn advance(&mut self, duration: Duration) {
             self.current_time += duration;
@@ -171,7 +169,9 @@ mod tests {
         let mut builder = create_test_lessor_builder();
         builder.user = None;
         let result = builder.build();
-        assert!(matches!(result, Err(DomainCoreError::MissingField(field)) if field == "user"));
+        assert!(
+            matches!(result, Err(DomainCoreError::MissingField(field)) if field == "user")
+        );
     }
 
     #[test]
@@ -179,7 +179,9 @@ mod tests {
         let mut builder = create_test_lessor_builder();
         builder.phone = None;
         let result = builder.build();
-        assert!(matches!(result, Err(DomainCoreError::MissingField(field)) if field == "phone"));
+        assert!(
+            matches!(result, Err(DomainCoreError::MissingField(field)) if field == "phone")
+        );
     }
 
     // --- Entity Method Tests ---
@@ -188,7 +190,7 @@ mod tests {
     fn test_set_id() {
         let lessor = create_test_lessor_builder().build().unwrap();
         assert_eq!(lessor.id(), None);
-        
+
         let lessor_with_id = lessor.set_id(Some(202));
         assert_eq!(lessor_with_id.id(), Some(202));
     }
@@ -206,7 +208,7 @@ mod tests {
 
         // Advance the clock to a new, known time
         clock.advance(Duration::days(1));
-        
+
         let deleted_lessor = lessor.set_delete(&clock);
 
         assert!(deleted_lessor.is_delete());
@@ -227,17 +229,17 @@ mod tests {
             .createtime(now)
             .build()
             .unwrap();
-        
+
         assert_eq!(lessor.id(), Some(88));
         assert_eq!(lessor.phone(), "555-5678");
         assert_eq!(lessor.user(), &user);
         assert_eq!(lessor.createtime(), now);
         assert_eq!(lessor.updatetime(), now);
-        
+
         // Test user_mut by actually mutating the user
         let mut mutable_lessor = lessor.clone();
         let user_ref_mut = mutable_lessor.user_mut();
-        
+
         // Use a mock clock to test a state change on the nested user
         let clock = MockClock::new(now);
         *user_ref_mut = user_ref_mut.clone().ban_user(&clock);

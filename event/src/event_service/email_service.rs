@@ -1,22 +1,21 @@
 use crate::event_error::EventResult;
 
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct EmailStruct {
-    pub from:String,
-    pub to:String,
-    pub content:String,
+    pub from: String,
+    pub to: String,
+    pub content: String,
 }
 
-pub struct EmailService{
-    pub sender:String,
+pub struct EmailService {
+    pub sender: String,
 }
 
 impl EmailService {
-    pub async fn send_email(&self,_e:EmailStruct) -> EventResult<()> {
+    pub async fn send_email(&self, _e: EmailStruct) -> EventResult<()> {
         Ok(())
     }
 }
-
 
 pub(crate) fn generate_cancellation_email_simple(
     organizer_name: &str,
@@ -37,7 +36,6 @@ pub(crate) fn generate_cancellation_email_simple(
 VenueFlow团队"#,
         lessor_name, organizer_name, venue_name
     )
-
 }
 
 pub(crate) fn generate_cancellation_email_simple_for_organizer(
@@ -57,15 +55,14 @@ pub(crate) fn generate_cancellation_email_simple_for_organizer(
 此致，
 
 VenueFlow团队"#,
-        organizer_name, lessor_name,  venue_name
+        organizer_name, lessor_name, venue_name
     )
-
 }
 
 pub(crate) fn generate_rental_email_simple(
     organizer_name: &str,
     venue_name: &str,
-    status:&str
+    status: &str,
 ) -> String {
     format!(
         r#"尊敬的 {}，
@@ -79,7 +76,6 @@ pub(crate) fn generate_rental_email_simple(
 此致，
 
 VenueFlow团队"#,
-        organizer_name, status,  venue_name
+        organizer_name, status, venue_name
     )
-
 }

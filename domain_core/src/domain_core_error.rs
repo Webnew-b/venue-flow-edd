@@ -4,12 +4,9 @@ use crate::rental::rental_error::RentalError;
 use crate::user::user_error::UserError;
 use crate::venue::venue_error::VenueError;
 
-pub type DomainCoreResult<T> = std::result::Result<T,DomainCoreError>;
+pub type DomainCoreResult<T> = std::result::Result<T, DomainCoreError>;
 
-
-
-
-#[derive(Debug,Error)]
+#[derive(Debug, Error)]
 pub enum DomainCoreError {
     #[error(transparent)]
     UserError(#[from] UserError),

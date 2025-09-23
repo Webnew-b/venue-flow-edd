@@ -1,18 +1,22 @@
 edition = "2021"
 
-# 设置最大行宽
+# 基本格式化选项
 max_width = 80
+tab_spaces = 4
+hard_tabs = false
+newline_style = "Auto"
 
-# 是否在结构体的字段之间添加空行
-# struct_field_align_threshold = 30
+# 函数和控制流
+fn_params_layout = "Tall"
+use_small_heuristics = "Default"
 
-# 是否强制对齐匹配分支中的箭头
+# 导入和重排
+reorder_imports = true
+remove_nested_parens = true
+merge_derives = true
+
+# 尾随逗号
 match_block_trailing_comma = true
 
-# 使用小驼峰命名法
+# 其他
 force_explicit_abi = false
-
-# 在函数定义、调用等地方强制使用小括号
-fn_params_layout = "Tall"
-
-

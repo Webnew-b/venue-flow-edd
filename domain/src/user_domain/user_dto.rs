@@ -4,12 +4,10 @@ pub enum UserLoginEnum {
 }
 
 pub struct UserLoginName {
-    pub login_type:UserLoginEnum,
-    pub password:String,
+    pub login_type: UserLoginEnum,
+    pub password: String,
 }
 
 pub struct UserLoginToken {
-    pub token:String
+    pub token: String,
 }
-
-

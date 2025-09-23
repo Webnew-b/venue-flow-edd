@@ -1,9 +1,10 @@
 use thiserror::Error;
 
-
-#[derive(Error,Debug)]
+#[derive(Error, Debug)]
 pub enum AppUserError {
-    #[error("Invalid gender,gender accept:male,female,not-binary,prefer-not-to-say")]
+    #[error(
+        "Invalid gender,gender accept:male,female,not-binary,prefer-not-to-say"
+    )]
     InvalidGender,
     #[error("The email is illegal.")]
     EmailIllegal,

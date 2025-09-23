@@ -6,12 +6,10 @@ use fake::faker::filesystem::en::FilePath;
 use fake::faker::internet::en::{FreeEmail, Password, Username};
 use fake::Fake;
 
-
-
 pub mod rental_common;
 pub mod user_common;
-pub mod venue_common;
 pub mod util_common;
+pub mod venue_common;
 
 pub fn fake_number() -> i64 {
     (0..10000000).fake()
@@ -25,14 +23,12 @@ pub fn fake_password() -> String {
     Password(6..30).fake::<String>()
 }
 
-pub fn fake_password_with_range(
-    range:std::ops::Range<usize>
-    ) -> String {
+pub fn fake_password_with_range(range: std::ops::Range<usize>) -> String {
     Password(range).fake::<String>()
 }
 
 pub fn fake_username() -> String {
-    let mut name : String;
+    let mut name: String;
     loop {
         name = Username().fake::<String>();
         if name.chars().count() > 5 && name.chars().count() < 30 {
@@ -44,7 +40,6 @@ pub fn fake_username() -> String {
 pub fn fake_email() -> String {
     FreeEmail().fake::<String>()
 }
-
 
 pub fn fake_name() -> String {
     CurrencyName().fake::<String>()
@@ -58,8 +53,6 @@ pub fn fake_address() -> String {
     )
 }
 
-pub fn fake_file_path() -> PathBuf{
+pub fn fake_file_path() -> PathBuf {
     FilePath().fake::<PathBuf>()
 }
-
-

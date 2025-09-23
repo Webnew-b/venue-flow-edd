@@ -1,4 +1,4 @@
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum CodeEnum {
     Success,
 
@@ -20,7 +20,7 @@ pub fn get_code(code: CodeEnum) -> u16 {
         CodeEnum::Other => 1,
         CodeEnum::ServiceError => 2,
         CodeEnum::NotFound => 3,
-        CodeEnum::FileInvaild=>1000,
+        CodeEnum::FileInvaild => 1000,
         CodeEnum::Ban => 2000,
         CodeEnum::Unauthorized => 2001,
 

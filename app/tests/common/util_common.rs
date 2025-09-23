@@ -1,24 +1,24 @@
 use chrono::Utc;
-use domain::util_trait::PasswordHasher;
-use domain::util_trait::ImageRepository;
 use domain::domain_error::DomainError;
+use domain::util_trait::ImageRepository;
+use domain::util_trait::PasswordHasher;
 use domain_core::utils::Clock;
 
+use async_trait::async_trait;
+use mockall::mock;
 use std::path::Path;
 use std::path::PathBuf;
-use mockall::mock;
-use async_trait::async_trait;
 
-mock!{
+mock! {
     pub PwdHasher {}
     #[async_trait]
     impl PasswordHasher for PwdHasher {
         fn hash(&self, password: &str) -> Result<String, DomainError>;
         fn verify(&self, password: &str, hashed: &str) -> Result<(), DomainError>;
-    } 
+    }
 }
 
-mock!{
+mock! {
     pub ImageRepo {}
     #[async_trait]
     impl ImageRepository for ImageRepo {
@@ -27,13 +27,13 @@ mock!{
 
         async fn upload_images(&self,image:Vec<PathBuf>)
             ->Result<Vec<String>,DomainError>;
-        
-    } 
+
+    }
 }
 
-pub struct TestUtilMock{
-    pub image_repo:MockImageRepo,
-    pub password_hash:MockPwdHasher,
+pub struct TestUtilMock {
+    pub image_repo: MockImageRepo,
+    pub password_hash: MockPwdHasher,
 }
 
 pub fn mock_utils_setup() -> TestUtilMock {
@@ -43,7 +43,7 @@ pub fn mock_utils_setup() -> TestUtilMock {
     }
 }
 
-pub struct MockTime{}
+pub struct MockTime {}
 
 impl Clock for MockTime {
     fn now(&self) -> chrono::DateTime<chrono::Utc> {

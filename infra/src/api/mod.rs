@@ -17,11 +17,11 @@ pub struct CustomResponse<T: Serialize + for<'de> Deserialize<'de>> {
 }
 
 impl<T: Serialize + for<'de> Deserialize<'de>> CustomResponse<T> {
-    pub fn new(msg:&str,code:CodeEnum,res:Option<T>)-> Self{
-        Self{
-            code:get_code(code),
+    pub fn new(msg: &str, code: CodeEnum, res: Option<T>) -> Self {
+        Self {
+            code: get_code(code),
             message: msg.to_string(),
-            body:res
+            body: res,
         }
     }
     pub fn success(resp: Option<T>) -> Self {
@@ -32,11 +32,11 @@ impl<T: Serialize + for<'de> Deserialize<'de>> CustomResponse<T> {
         }
     }
 
-    pub fn success_by_response(resp:Option<T>) -> HttpResponse {
-        let res = Self{
-            code:get_code(CodeEnum::Success),
+    pub fn success_by_response(resp: Option<T>) -> HttpResponse {
+        let res = Self {
+            code: get_code(CodeEnum::Success),
             message: "Success".to_string(),
-            body:resp
+            body: resp,
         };
         HttpResponse::Ok().json(res)
     }
@@ -49,79 +49,71 @@ pub(crate) enum CustomResponseError {
     Unauthorized(String),
     Forbidden(String),
     MethodNotAllowed(String),
-    Other(String,CodeEnum),
+    Other(String, CodeEnum),
     ServiceError,
 }
 
 impl fmt::Display for CustomResponseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            CustomResponseError::NotFound(s) |
-            CustomResponseError::BadRequest(s) |
-            CustomResponseError::Unauthorized(s) |
-            CustomResponseError::Forbidden(s) |
-            CustomResponseError::MethodNotAllowed(s) |
-            CustomResponseError::Other(s,_) => {
-                write!(f,"{}",s)
+            CustomResponseError::NotFound(s)
+            | CustomResponseError::BadRequest(s)
+            | CustomResponseError::Unauthorized(s)
+            | CustomResponseError::Forbidden(s)
+            | CustomResponseError::MethodNotAllowed(s)
+            | CustomResponseError::Other(s, _) => {
+                write!(f, "{}", s)
             },
-            CustomResponseError::ServiceError => write!(f,"Server error"),
+            CustomResponseError::ServiceError => write!(f, "Server error"),
         }
     }
 }
 
-
 impl ResponseError for CustomResponseError {
-    fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
+    fn error_response(
+        &self,
+    ) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
         match self {
-            CustomResponseError::ServiceError=>{
+            CustomResponseError::ServiceError => {
                 let res = CustomResponse::<()>::new(
                     "Server Error",
                     CodeEnum::ServiceError,
-                    None);
+                    None,
+                );
                 HttpResponse::InternalServerError().json(res)
             },
-            CustomResponseError::Forbidden(e)=>{
-                let res = CustomResponse::<()>::new(
-                    e,
-                    CodeEnum::Forbidden,
-                    None);
+            CustomResponseError::Forbidden(e) => {
+                let res =
+                    CustomResponse::<()>::new(e, CodeEnum::Forbidden, None);
                 HttpResponse::Forbidden().json(res)
             },
-            CustomResponseError::Unauthorized(e)=>{
-                let res = CustomResponse::<()>::new(
-                    e,
-                    CodeEnum::Unauthorized,
-                    None);
+            CustomResponseError::Unauthorized(e) => {
+                let res =
+                    CustomResponse::<()>::new(e, CodeEnum::Unauthorized, None);
                 HttpResponse::Unauthorized().json(res)
             },
-            CustomResponseError::NotFound(e)=>{
-                let res = CustomResponse::<()>::new(
-                    e,
-                    CodeEnum::NotFound,
-                    None);
+            CustomResponseError::NotFound(e) => {
+                let res =
+                    CustomResponse::<()>::new(e, CodeEnum::NotFound, None);
                 HttpResponse::NotFound().json(res)
             },
-            CustomResponseError::BadRequest(e)=>{
-                let res = CustomResponse::<()>::new(
-                    e,
-                    CodeEnum::BadRequest,
-                    None);
+            CustomResponseError::BadRequest(e) => {
+                let res =
+                    CustomResponse::<()>::new(e, CodeEnum::BadRequest, None);
                 HttpResponse::BadRequest().json(res)
             },
-            CustomResponseError::MethodNotAllowed(e)=>{
+            CustomResponseError::MethodNotAllowed(e) => {
                 let res = CustomResponse::<()>::new(
                     e,
                     CodeEnum::MethodNotAllowed,
-                    None);
+                    None,
+                );
                 HttpResponse::MethodNotAllowed().json(res)
             },
-            CustomResponseError::Other(s,c)=>{
-                let res = CustomResponse::<()>::new(
-                    s,
-                    c.clone(),
-                    None);
+            CustomResponseError::Other(s, c) => {
+                let res = CustomResponse::<()>::new(s, c.clone(), None);
                 HttpResponse::Ok().json(res)
-            }
+            },
         }
     }
 }
@@ -147,7 +139,7 @@ pub async fn default_service_handle_error() -> impl Responder {
     let response = CustomResponse::<()>::new(
         "Request path is not found",
         CodeEnum::NotFound,
-        None
+        None,
     );
     HttpResponse::NotFound().json(response)
 }

@@ -2,22 +2,20 @@ use std::io::{Error, ErrorKind};
 
 use actix_web::http::StatusCode;
 use actix_web::middleware::ErrorHandlers;
-use actix_web::{web, App, HttpServer, };
+use actix_web::{web, App, HttpServer};
 use log::{log, Level};
 use tracing_actix_web::{
     DefaultRootSpanBuilder, RootSpanBuilder, TracingLogger,
 };
 
-use crate::api::{self, default_service_handle_error};
 use crate::api::middleware::encrypt::add_service_error_handle;
+use crate::api::{self, default_service_handle_error};
 use crate::web::app_state::create_app_state;
 
 use super::config::config::get_web_server_config;
 //use super::oss::{self, OssClientConfig};
 
 pub mod app_state;
-
-
 
 #[derive(Clone)]
 struct CustomRootSpanBuilder;
@@ -45,7 +43,6 @@ impl RootSpanBuilder for CustomRootSpanBuilder {
     }
 }
 
-
 pub async fn start_web_server() -> std::io::Result<()> {
     let config_res = get_web_server_config();
 
@@ -66,10 +63,9 @@ pub async fn start_web_server() -> std::io::Result<()> {
         App::new()
             .wrap(TracingLogger::<CustomRootSpanBuilder>::new())
             .wrap(
-                ErrorHandlers::new().handler(
-                    StatusCode::BAD_REQUEST, 
-                    add_service_error_handle)
-                )
+                ErrorHandlers::new()
+                    .handler(StatusCode::BAD_REQUEST, add_service_error_handle),
+            )
             .default_service(web::route().to(default_service_handle_error))
             .app_data(web::Data::new(state.clone()))
             .configure(api::example::router)

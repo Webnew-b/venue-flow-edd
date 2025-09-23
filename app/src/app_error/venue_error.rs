@@ -1,10 +1,7 @@
 use thiserror::Error;
 
-
-
-#[derive(Error,Debug)]
+#[derive(Error, Debug)]
 pub enum AppVenueError {
-    
     //#[error("Invalid gender,gender accept:male,female,not-binary,prefer-not-to-say")]
     //InvalidGender,
     //#[error("The user is illegal,cause:{0}")]
@@ -14,7 +11,6 @@ pub enum AppVenueError {
 
     //#[error("The {0} or password is incorrect.")]
     //LoginIncrrect(String),
-
     #[error("Other error:{0}")]
     Other(String),
 }
