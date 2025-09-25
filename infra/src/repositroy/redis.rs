@@ -6,7 +6,9 @@ use r2d2_redis::RedisConnectionManager;
 use tokio::sync::Mutex;
 use tracing::error;
 
-use crate::config::config::get_redis_url;
+use super::redis::config::get_redis_url;
+
+pub mod config;
 
 pub fn create_redis_connection(
 ) -> Result<Arc<Mutex<Pool<RedisConnectionManager>>>, Error> {

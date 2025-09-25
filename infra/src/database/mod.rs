@@ -2,10 +2,11 @@ use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 use std::time::Duration;
 
+use super::database::config::*;
 use log::{info, log, Level};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
-use crate::config::config::get_db_config;
+pub(crate) mod config;
 pub(crate) mod entities;
 
 pub async fn start_db_connection() -> Result<Arc<DatabaseConnection>, Error> {

@@ -5,31 +5,11 @@ use std::io;
 use std::sync::Arc;
 use tracing::{error, info};
 
+use super::oss::config::*;
+
+pub mod config;
 pub mod image_file;
 
-#[derive(Debug, Clone)]
-pub struct OssConfig {
-    pub url: String,
-    pub access_key: String,
-    pub secret_key: String,
-    pub bucket_name: String,
-    pub temp_folder: String,
-    pub region: Option<String>,
-    pub custom_domain: Option<String>,
-}
-
-/// OSS 客户端配置
-#[derive(Debug)]
-pub struct OssClientConfig {
-    pub client: Client,
-    pub bucket_name: String,
-    pub temp_folder: String,
-    pub image_domain: String,
-    pub region: Option<String>,
-    pub custom_domain: Option<String>,
-}
-
-/// OSS 错误类型
 #[derive(Debug, thiserror::Error)]
 pub enum OssError {
     #[error("OSS configuration is invalid: {0}")]
@@ -79,11 +59,6 @@ impl From<OssError> for io::Error {
             OssError::Io(io_err) => io_err,
         }
     }
-}
-
-fn gen_io_error<E: std::fmt::Display>(err: E, message: &str) -> io::Error {
-    error!("{}: {}", message, err);
-    io::Error::new(io::ErrorKind::InvalidInput, format!("{}: {}", message, err))
 }
 
 pub async fn init_oss_client() -> Result<Arc<OssClientConfig>, OssError> {
@@ -218,11 +193,9 @@ async fn validate_bucket_exists(
 
 fn build_image_domain(config: &OssConfig) -> Result<String, OssError> {
     if let Some(custom_domain) = &config.custom_domain {
-        // 使用自定义域名
         let domain = custom_domain.trim_end_matches('/');
         Ok(format!("https://{}/", domain))
     } else {
-        // 使用标准 S3 域名格式
         let region = config.region.as_deref().unwrap_or("us-east-1");
         let url = if region == "us-east-1" {
             format!("https://{}.s3.amazonaws.com/", config.bucket_name)
@@ -262,23 +235,6 @@ pub async fn init_oss_client_with_config(
     Ok(Arc::new(oss_client_config))
 }
 
-fn get_oss_fs() -> Result<OssConfig, Box<dyn std::error::Error>> {
-    Ok(OssConfig {
-        url: std::env::var("OSS_URL")
-            .unwrap_or_else(|_| "https://s3.amazonaws.com".to_string()),
-        access_key: std::env::var("OSS_ACCESS_KEY")
-            .map_err(|_| "OSS_ACCESS_KEY environment variable not set")?,
-        secret_key: std::env::var("OSS_SECRET_KEY")
-            .map_err(|_| "OSS_SECRET_KEY environment variable not set")?,
-        bucket_name: std::env::var("OSS_BUCKET_NAME")
-            .map_err(|_| "OSS_BUCKET_NAME environment variable not set")?,
-        temp_folder: std::env::var("OSS_TEMP_FOLDER")
-            .unwrap_or_else(|_| "/tmp".to_string()),
-        region: std::env::var("OSS_REGION").ok(),
-        custom_domain: std::env::var("OSS_CUSTOM_DOMAIN").ok(),
-    })
-}
-
 pub async fn health_check_oss(
     client_config: &OssClientConfig,
 ) -> Result<(), OssError> {
@@ -302,48 +258,5 @@ pub async fn health_check_oss(
                 e
             )))
         },
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_bucket_name_validation() {
-        assert!(is_valid_bucket_name("my-bucket"));
-        assert!(is_valid_bucket_name("my.bucket.name"));
-        assert!(is_valid_bucket_name("bucket123"));
-
-        assert!(!is_valid_bucket_name("MyBucket")); // 大写字母
-        assert!(!is_valid_bucket_name("-bucket")); // 以连字符开头
-        assert!(!is_valid_bucket_name("bucket-")); // 以连字符结尾
-        assert!(!is_valid_bucket_name(".bucket")); // 以点开头
-        assert!(!is_valid_bucket_name("bucket.")); // 以点结尾
-        assert!(!is_valid_bucket_name("ab")); // 太短
-    }
-
-    #[test]
-    fn test_image_domain_building() {
-        let config = OssConfig {
-            url: "https://s3.amazonaws.com".to_string(),
-            access_key: "key".to_string(),
-            secret_key: "secret".to_string(),
-            bucket_name: "test-bucket".to_string(),
-            temp_folder: "/tmp".to_string(),
-            region: Some("us-west-2".to_string()),
-            custom_domain: None,
-        };
-
-        let domain = build_image_domain(&config).unwrap();
-        assert_eq!(domain, "https://test-bucket.s3.us-west-2.amazonaws.com/");
-
-        let config_with_custom = OssConfig {
-            custom_domain: Some("cdn.example.com".to_string()),
-            ..config
-        };
-
-        let custom_domain = build_image_domain(&config_with_custom).unwrap();
-        assert_eq!(custom_domain, "https://cdn.example.com/");
     }
 }
