@@ -2,10 +2,7 @@ use std::{ops::Deref, sync::Arc};
 
 use async_trait::async_trait;
 use domain::{
-    domain_error::{
-        database_error::DatabaseError, domain_rental_error::DomainRentalError,
-        DomainError,
-    },
+    domain_error::{domain_rental_error::DomainRentalError, DomainError},
     rental_domain::{rental_dto::RentalRes, RentalRespository},
 };
 use domain_core::rental::{Rental, RentalBuilder};
@@ -17,8 +14,11 @@ use sea_orm::{
 use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter};
 
 use crate::{
-    database::entities::rental_request as RentalCrate,
-    database::entities::venue as VenueCrate,
+    database::{
+        entities::{rental_request as RentalCrate, venue as VenueCrate},
+        DatabaseError,
+    },
+    infra_error::InfraError,
     service::rental_service::enum_converstion::{
         rental_activity_type_to_db, rental_activity_type_to_domain,
         rental_status_to_db, rental_status_to_domain,
@@ -82,9 +82,10 @@ impl RentalRespository for RentalService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
-        let res = rental.ok_or(DatabaseError::DataNotFound)?;
+        let res = rental
+            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
         db_rental_to_domain(res)
     }
 
@@ -103,7 +104,7 @@ impl RentalRespository for RentalService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let rentals = rentals
             .into_iter()
@@ -141,7 +142,7 @@ impl RentalRespository for RentalService {
         let res = domain_rental_to_db(rental.clone());
         let res = res.insert(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
-            DatabaseError::SaveEntityFail
+            InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         let rental = rental.update_id(res.id);
         Ok(rental)
@@ -151,7 +152,7 @@ impl RentalRespository for RentalService {
         let rental = domain_rental_to_db(rental);
         rental.save(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
-            DatabaseError::SaveEntityFail
+            InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         Ok(())
     }

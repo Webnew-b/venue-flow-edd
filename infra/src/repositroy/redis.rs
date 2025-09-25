@@ -1,24 +1,17 @@
-use std::io::{Error, ErrorKind};
 use std::sync::Arc;
 
 use r2d2::Pool;
 use r2d2_redis::RedisConnectionManager;
 use tokio::sync::Mutex;
-use tracing::error;
 
 use super::redis::config::get_redis_url;
+use crate::infra_error::InfraError;
 
 pub mod config;
 
 pub fn create_redis_connection(
-) -> Result<Arc<Mutex<Pool<RedisConnectionManager>>>, Error> {
-    let url = get_redis_url().map_err(|e| {
-        error!("{}", e.to_string());
-        Error::new(
-            ErrorKind::InvalidData,
-            "Redis configurtion seems to have an Illegal field.",
-        )
-    })?;
+) -> Result<Arc<Mutex<Pool<RedisConnectionManager>>>, InfraError> {
+    let url = get_redis_url()?;
 
     let manager = RedisConnectionManager::new(url).expect("Invaild Redis URL");
 

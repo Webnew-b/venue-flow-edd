@@ -1,9 +1,9 @@
 use aws_sdk_s3::primitives::ByteStream;
 use aws_sdk_s3::Client;
-use domain::domain_error::infra_error::InfraError;
-use domain::domain_error::DomainError;
-use std::io;
 use std::path::{Path, PathBuf};
+
+use crate::infra_error::InfraError;
+use crate::repositroy::oss::OssError;
 
 pub struct ImagePath<'a> {
     pub bucket_name: String,
@@ -18,37 +18,31 @@ pub fn gen_uuid_image_name(ext: &str) -> String {
 pub fn change_image_type(
     image_path: &Path,
     output: &Path,
-) -> Result<(), io::Error> {
+) -> Result<(), InfraError> {
     let img = image::open(image_path).map_err(|e| {
         tracing::error!("Failed to open image: {}", e);
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            "Could not open the image file.",
-        )
+        OssError::CoundNotOpenFile
     })?;
 
     img.save_with_format(output, image::ImageFormat::WebP)
         .map_err(|e| {
             tracing::error!("Failed to save image as WebP: {}", e);
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Could not create the WebP image file.",
-            )
+            OssError::InvalidFileFormat.into()
         })
 }
 
-fn change_path_extension(source_path: &Path) -> Result<PathBuf, DomainError> {
+fn change_path_extension(source_path: &Path) -> Result<PathBuf, InfraError> {
     let parent_path = match source_path.parent() {
         Some(p) => p,
         None => {
-            return Err(InfraError::FileNotFound.into());
+            return Err(InfraError::FileNotFound);
         },
     };
 
     let mut file_name = match source_path.file_stem() {
         Some(p) => p.to_string_lossy().to_string(),
         None => {
-            return Err(InfraError::FileNotRead.into());
+            return Err(InfraError::FileNotRead);
         },
     };
 
@@ -62,7 +56,7 @@ async fn upload_object(
     key: &str,
     data: Vec<u8>,
     content_type: Option<&str>,
-) -> Result<String, DomainError> {
+) -> Result<String, InfraError> {
     let byte_stream = ByteStream::from(data);
     let mut put_object = client
         .put_object()
@@ -104,18 +98,18 @@ fn guess_content_type(path: &Path) -> &'static str {
 }
 
 /// 创建临时 WebP 文件路径
-fn create_temp_webp_path() -> Result<PathBuf, DomainError> {
+fn create_temp_webp_path() -> PathBuf {
     let temp_dir = std::env::temp_dir();
     let uuid = uuid::Uuid::new_v4();
     let temp_filename = format!("temp_image_{}.webp", uuid);
-    Ok(temp_dir.join(temp_filename))
+    temp_dir.join(temp_filename)
 }
 
 pub async fn save_file_to_oss<'a>(
     client: &Client,
     path: ImagePath<'a>,
-) -> Result<String, DomainError> {
-    let temp_webp_path = create_temp_webp_path()?;
+) -> Result<String, InfraError> {
+    let temp_webp_path = create_temp_webp_path();
 
     change_image_type(path.image_path, &temp_webp_path).map_err(|e| {
         tracing::error!("Failed to convert image to WebP: {}", e);

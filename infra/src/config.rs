@@ -22,6 +22,14 @@ impl fmt::Display for ConfigError {
 
 impl std::error::Error for ConfigError {}
 
+pub fn get_env_value_from_key(key: &str) -> Result<String, ConfigError> {
+    dotenv::dotenv().ok();
+    std::env::var(key).map_err(|e| match e {
+        env::VarError::NotPresent => ConfigError::NotFound(key.to_string()),
+        env::VarError::NotUnicode(_) => ConfigError::Illegal(key.to_string()),
+    })
+}
+
 pub enum AppEnv {
     DEVELOP,
     PRODUCTION,
@@ -44,47 +52,25 @@ impl FromStr for AppEnv {
 pub fn get_env_type() -> Result<AppEnv, ConfigError> {
     let key = "APP_ENV";
 
-    let env = get_env_value_from_key(key).map_err(|e| gen_error(e, key))?;
+    let env = get_env_value_from_key(key)?;
 
     let value = AppEnv::from_str(&env)?;
 
     Ok(value)
 }
 
-fn get_env_value_from_key(key: &str) -> Result<String, dotenv::Error> {
-    dotenv::dotenv().ok();
-    match env::var(key) {
-        Ok(e) => Ok(e),
-        Err(e) => Err(dotenv::Error::EnvVar(e)),
-    }
-}
-
 pub fn get_web_server_config() -> Result<(String, u16), ConfigError> {
     let key = "SERVER_ADDR";
-    let addr_res = get_env_value_from_key(&key);
-    let addr = match addr_res {
-        Ok(a) => a,
-        Err(e) => {
-            log!(Level::Error, "{}", e.to_string());
-            return Err(ConfigError::Illegal(key.to_owned()));
-        },
-    };
+    let addr = get_env_value_from_key(&key)?;
 
     let key = "PORT";
-    let port_res = get_env_value_from_key(key);
-    let port = match port_res {
-        Ok(p) => p,
-        Err(e) => {
-            log!(Level::Error, "{}", e.to_string());
-            return Err(ConfigError::Illegal(key.to_owned()));
-        },
-    };
+    let port = get_env_value_from_key(key)?;
 
     let port_check: Result<u16, _> = port.parse();
     let port = match port_check {
         Ok(p) => p,
         Err(_) => {
-            log!(Level::Error, "The port is not a number");
+            log::error!("The port is not a number");
             return Err(ConfigError::Illegal(key.to_owned()));
         },
     };

@@ -2,10 +2,7 @@ use std::{ops::Deref, sync::Arc};
 
 use async_trait::async_trait;
 use domain::{
-    domain_error::{
-        database_error::DatabaseError, domain_venue_error::DomainVenueError,
-        DomainError,
-    },
+    domain_error::{domain_venue_error::DomainVenueError, DomainError},
     venue_domain::{venue_dto::IndexVenue, VenueRepository},
     PageLimit,
 };
@@ -18,16 +15,19 @@ use sea_orm::{
     ActiveValue::{NotSet, Set},
     ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType,
     LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
-    QueryTrait,
 };
 
 use crate::{
-    database::entities::{
-        lessor as LessorCrate,
-        sea_orm_active_enums::{ActivityType, VenueState},
-        user as UserCrate, venue as VenueCrate,
-        venue_image_uri as VenueImageUri,
+    database::{
+        entities::{
+            lessor as LessorCrate,
+            sea_orm_active_enums::{ActivityType, VenueState},
+            user as UserCrate, venue as VenueCrate,
+            venue_image_uri as VenueImageUri,
+        },
+        DatabaseError,
     },
+    infra_error::InfraError,
     service::{
         user_service::{db_lessor_to_domain, db_user_to_domain_user},
         venue_service::enum_converstion::{
@@ -143,16 +143,17 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
-        let venue = venue.ok_or(DatabaseError::DataNotFound)?;
+        let venue = venue
+            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
         let venue_images = VenueImageUri::Entity::find()
             .filter(VenueImageUri::Column::VenueId.eq(venue.id))
             .all(self.database.deref())
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let venue = db_venue_to_domain(venue, venue_images)?;
         Ok(venue)
@@ -170,7 +171,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
         let venue_with_images = venues
@@ -178,7 +179,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
         let venues =
@@ -210,7 +211,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
         let venue_with_images = venue
@@ -218,7 +219,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
         let venue = venue.into_iter().try_fold(Vec::new(), |mut acc, v| {
@@ -240,14 +241,14 @@ impl VenueRepository for VenueService {
         let (venue, venue_images) = domain_venue_to_db(v.clone());
         let venue = venue.insert(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
-            DatabaseError::SaveEntityFail
+            InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         let _ = VenueImageUri::Entity::insert_many(venue_images)
             .exec(self.database.deref())
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SaveEntityFail
+                InfraError::DatabaseError(DatabaseError::SaveEntityFail)
             })?;
         let v = v.update_id(venue.id);
         let venue_images = VenueImageUri::Entity::find()
@@ -256,7 +257,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let venue_images =
             venue_images.iter().map(venue_image_to_domain).collect();
@@ -268,7 +269,7 @@ impl VenueRepository for VenueService {
         let (venue, _venue_images) = domain_venue_to_db(v);
         venue.save(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
-            DatabaseError::SaveEntityFail
+            InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         Ok(())
     }
@@ -300,7 +301,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let venue_ids: Vec<i64> =
             venues.iter().map(|i| i.venue_id.clone()).collect();
@@ -312,7 +313,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let index_venues = venues
             .into_iter()
@@ -348,7 +349,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         Ok(venue.is_some())
     }
@@ -362,21 +363,23 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
-        let venue = venue.ok_or(DatabaseError::DataNotFound)?;
+        let venue = venue
+            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
         let (lessor, user) = LessorCrate::Entity::find_by_id(venue.lessor_id)
             .find_also_related(UserCrate::Entity)
             .one(self.database.deref())
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?
-            .ok_or(DatabaseError::DataNotFound)?;
+            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
 
-        let user = user.ok_or(DatabaseError::DataNotFound)?;
+        let user =
+            user.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
         let user = db_user_to_domain_user(user)?;
         let lessor = db_lessor_to_domain(user, lessor)?;
         Ok(lessor)
@@ -392,7 +395,7 @@ impl VenueRepository for VenueService {
             let image =
                 image.insert(self.database.deref()).await.map_err(|e| {
                     log::error!("{}", e);
-                    DatabaseError::SaveEntityFail
+                    InfraError::DatabaseError(DatabaseError::SaveEntityFail)
                 })?;
             res.push(image);
         }
@@ -412,10 +415,12 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         if res.len() < 1 {
-            return Err(DatabaseError::DataNotFound.into());
+            return Err(
+                InfraError::DatabaseError(DatabaseError::DataNotFound).into()
+            );
         }
         VenueImageUri::Entity::delete_many()
             .filter(VenueImageUri::Column::Id.is_in(images))
@@ -423,7 +428,7 @@ impl VenueRepository for VenueService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::DeleteEntityFail
+                InfraError::DatabaseError(DatabaseError::DeleteEntityFail)
             })?;
         Ok(())
     }

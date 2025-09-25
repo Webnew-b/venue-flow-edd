@@ -11,6 +11,7 @@ pub mod venue_error;
 
 pub type AppResult<T> = std::result::Result<T, AppError>;
 
+#[deprecated(note = "It will be merged to domain error at next version.")]
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error(transparent)]

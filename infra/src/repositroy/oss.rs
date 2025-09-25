@@ -1,7 +1,6 @@
 use aws_config::{BehaviorVersion, Region};
 use aws_sdk_s3::config::Credentials;
 use aws_sdk_s3::Client;
-use std::io;
 use std::sync::Arc;
 use tracing::{error, info};
 
@@ -30,35 +29,11 @@ pub enum OssError {
     #[error("OSS bucket does not exist: {bucket_name}")]
     BucketNotExists { bucket_name: String },
 
-    #[error("IO error: {0}")]
-    Io(#[from] io::Error),
-}
+    #[error("Could not open the file.")]
+    CoundNotOpenFile,
 
-impl From<OssError> for io::Error {
-    fn from(err: OssError) -> Self {
-        match err {
-            OssError::InvalidConfig(msg) => {
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
-            },
-            OssError::InvalidUrl(msg) => {
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
-            },
-            OssError::InvalidBucketName(msg) => {
-                io::Error::new(io::ErrorKind::InvalidInput, msg)
-            },
-            OssError::ClientCreationFailed(msg) => {
-                io::Error::new(io::ErrorKind::ConnectionAborted, msg)
-            },
-            OssError::ConnectionFailed(msg) => {
-                io::Error::new(io::ErrorKind::ConnectionRefused, msg)
-            },
-            OssError::BucketNotExists { bucket_name } => io::Error::new(
-                io::ErrorKind::NotFound,
-                format!("Bucket '{}' not found", bucket_name),
-            ),
-            OssError::Io(io_err) => io_err,
-        }
-    }
+    #[error("The file is invalid format.")]
+    InvalidFileFormat,
 }
 
 pub async fn init_oss_client() -> Result<Arc<OssClientConfig>, OssError> {

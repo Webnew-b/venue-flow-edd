@@ -6,6 +6,7 @@ use sea_orm::DatabaseConnection;
 use tokio::sync::Mutex;
 
 use crate::database::start_db_connection;
+use crate::infra_error::InfraError;
 use crate::repositroy::redis::create_redis_connection;
 
 #[derive(Clone)]
@@ -15,7 +16,7 @@ pub struct AppState {
     // pub oss:Arc<OssClientConfig>,
 }
 
-pub(super) async fn create_app_state() -> Result<AppState, std::io::Error> {
+pub(super) async fn create_app_state() -> Result<AppState, InfraError> {
     let db_connection = start_db_connection().await?;
     let redis_connection = create_redis_connection()?;
     // let oss_client = oss::init_oss_client().await?;

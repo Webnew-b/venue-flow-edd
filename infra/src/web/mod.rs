@@ -10,10 +10,8 @@ use tracing_actix_web::{
 
 use crate::api::middleware::encrypt::add_service_error_handle;
 use crate::api::{self, default_service_handle_error};
+use crate::config::get_web_server_config;
 use crate::web::app_state::create_app_state;
-
-use super::config::config::get_web_server_config;
-//use super::oss::{self, OssClientConfig};
 
 pub mod app_state;
 
@@ -43,19 +41,8 @@ impl RootSpanBuilder for CustomRootSpanBuilder {
     }
 }
 
-pub async fn start_web_server() -> std::io::Result<()> {
-    let config_res = get_web_server_config();
-
-    let config = match config_res {
-        Ok(e) => e,
-        Err(e) => {
-            log!(Level::Error, "{}", e.to_string());
-            return Err(std::io::Error::new(
-                ErrorKind::InvalidData,
-                "The configurtion seem has a illegally format.",
-            ));
-        },
-    };
+pub async fn start_web_server() -> anyhow::Result<()> {
+    let config = get_web_server_config()?;
 
     let state = create_app_state().await?;
 
@@ -76,5 +63,6 @@ pub async fn start_web_server() -> std::io::Result<()> {
         Error::new(ErrorKind::AddrNotAvailable, "Binding the server addr fail.")
     })?;
 
-    server.run().await
+    server.run().await?;
+    Ok(())
 }

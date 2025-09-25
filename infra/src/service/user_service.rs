@@ -7,6 +7,8 @@ use crate::database::entities::user::{
     self as UserCrate, ActiveModel as UserModel, Entity as UserEntity,
     Model as UserReadModel,
 };
+use crate::database::DatabaseError;
+use crate::infra_error::InfraError;
 use crate::service::user_service::enum_converstion::{
     user_gender_to_db, user_gender_to_domain, user_status_to_db,
     user_status_to_domain,
@@ -15,7 +17,6 @@ use crate::service::user_service::enum_converstion::{
 use async_trait::async_trait;
 use chrono::Duration;
 use chrono::Utc;
-use domain::domain_error::database_error::DatabaseError;
 use domain::domain_error::domain_user_error::DomainUserError;
 use domain::domain_error::DomainError;
 use domain::user_domain::user_dto::UserLoginToken;
@@ -137,9 +138,9 @@ pub(crate) struct UserService {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
-    sub: String, // Subject (通常是用户ID)
+    sub: String,
     company: String,
-    exp: usize, // Expiration time (JWT 标准字段)
+    exp: usize,
 }
 
 impl UserService {
@@ -155,9 +156,11 @@ impl UserService {
                     .await
                     .map_err(|e| {
                         log::error!("{}", e);
-                        DatabaseError::SelectFail
+                        InfraError::DatabaseError(DatabaseError::SelectFail)
                     })?;
-                let user = user.ok_or(DatabaseError::SelectPreantEntityFail)?;
+                let user = user.ok_or(InfraError::DatabaseError(
+                    DatabaseError::SelectPreantEntityFail,
+                ))?;
                 let user = db_user_to_domain_user(user)?;
                 let res = db_lessor_to_domain(user, o)?;
                 Ok(Some(res))
@@ -178,9 +181,11 @@ impl UserService {
                     .await
                     .map_err(|e| {
                         log::error!("{}", e);
-                        DatabaseError::SelectFail
+                        InfraError::DatabaseError(DatabaseError::SelectFail)
                     })?;
-                let user = user.ok_or(DatabaseError::SelectPreantEntityFail)?;
+                let user = user.ok_or(InfraError::DatabaseError(
+                    DatabaseError::SelectPreantEntityFail,
+                ))?;
                 let user = db_user_to_domain_user(user)?;
                 let res = db_organizer_to_domain(user, o)?;
                 Ok(Some(res))
@@ -199,10 +204,10 @@ impl UserGenerator for UserService {
         let claims = Claims {
             sub: id.to_string(),
             company: "lexon".to_owned(),
-            exp: (Utc::now() + Duration::hours(2)).timestamp() as usize, // 1小时前过期
+            exp: (Utc::now() + Duration::hours(2)).timestamp() as usize,
         };
 
-        let header = Header::new(Algorithm::HS256); // 使用 HMAC SHA256 算法
+        let header = Header::new(Algorithm::HS256);
 
         let token = encode(
             &header,
@@ -231,7 +236,7 @@ impl UserValidation for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         username.ok_or(DomainUserError::EmailNotFound)?;
         Ok(())
@@ -243,7 +248,7 @@ impl UserValidation for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         email.ok_or(DomainUserError::EmailNotFound)?;
         Ok(())
@@ -258,9 +263,10 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
                 log::error!("find user by {} id is failure cause:{}", id, e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
-        let user = user.ok_or(DatabaseError::DataNotFound)?;
+        let user =
+            user.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
         db_user_to_domain_user(user)
     }
 
@@ -278,9 +284,10 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
             log::error!("find user by login info is failure,casuse:{}", e);
-            DatabaseError::SelectFail
+            InfraError::DatabaseError(DatabaseError::SelectFail)
         })?;
-        let user = user.ok_or(DatabaseError::DataNotFound)?;
+        let user =
+            user.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
         db_user_to_domain_user(user)
     }
 
@@ -288,7 +295,7 @@ impl UserRepository for UserService {
         let user = domain_user_to_db_user(user);
         user.save(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
-            DatabaseError::SaveEntityFail
+            InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         Ok(())
     }
@@ -300,7 +307,7 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SaveEntityFail
+                InfraError::DatabaseError(DatabaseError::SaveEntityFail)
             })?;
 
         let user = user.update_id(user_model.id);
@@ -313,7 +320,7 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::DeleteEntityFail
+                InfraError::DatabaseError(DatabaseError::DeleteEntityFail)
             })?;
         Ok(())
     }
@@ -332,7 +339,7 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         self.get_user_by_organizer(organizer).await
     }
@@ -347,7 +354,7 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         self.get_user_by_lessor(lessor).await
     }
@@ -357,7 +364,9 @@ impl UserRepository for UserService {
         user_id: i64,
     ) -> Result<Organizer, DomainError> {
         let res = self.find_user_has_organizer_role(user_id).await?;
-        res.ok_or(DatabaseError::DataNotFound.into())
+        let res =
+            res.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+        Ok(res)
     }
 
     async fn find_lessor_by_user_id(
@@ -365,7 +374,7 @@ impl UserRepository for UserService {
         user_id: i64,
     ) -> Result<Lessor, DomainError> {
         let res = self.find_user_has_lessor_role(user_id).await?;
-        res.ok_or(DatabaseError::DataNotFound.into())
+        res.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound).into())
     }
 
     async fn find_lessor_by_id(&self, id: i64) -> Result<Lessor, DomainError> {
@@ -374,12 +383,13 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
-        self.get_user_by_lessor(lessor)
-            .await?
-            .ok_or(DatabaseError::DataNotFound.into())
+        self.get_user_by_lessor(lessor).await?.ok_or(
+            InfraError::DatabaseError(DatabaseError::DataNotFound.into())
+                .into(),
+        )
     }
 
     async fn find_organizer_by_id(
@@ -391,11 +401,11 @@ impl UserRepository for UserService {
             .await
             .map_err(|e| {
                 log::error!("{}", e);
-                DatabaseError::SelectFail
+                InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
-        self.get_user_by_organizer(organizer)
-            .await?
-            .ok_or(DatabaseError::DataNotFound.into())
+        self.get_user_by_organizer(organizer).await?.ok_or(
+            InfraError::DatabaseError(DatabaseError::DataNotFound).into(),
+        )
     }
 }
