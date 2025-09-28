@@ -16,7 +16,7 @@ EDD proposes an architectural philosophy centered on "identification and organiz
 - **Event-Driven Side Effects**: Decoupling external side effects through event mechanisms, validating improvements in system resilience and scalability
 - **100% Testable Business Logic**: Through pure layer design, validating the feasibility of fully testable business logic
 
-For more details, please refer to: [EDD Effect-Driven Design System Documentation]()
+For more details, please refer to: [EDD Effect-Driven Design System Documentation](https://lexonblog.pages.dev/posts/reflection/EDD/)
 
 ### Core Features
 
