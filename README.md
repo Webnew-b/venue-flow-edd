@@ -191,7 +191,7 @@ This project is currently under construction and not open for PR merging. If you
 
 ## License
 
-MIT License
+Apache License 2.0
 
 ## Contact
 
