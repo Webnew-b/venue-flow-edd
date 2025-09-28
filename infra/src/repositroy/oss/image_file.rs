@@ -64,7 +64,6 @@ async fn upload_object(
         .key(key)
         .body(byte_stream);
 
-    // 设置 content-type（如果提供）
     if let Some(ct) = content_type {
         put_object = put_object.content_type(ct);
     }
@@ -89,7 +88,7 @@ fn guess_content_type(path: &Path) -> &'static str {
         Some("jpg") | Some("jpeg") => "image/jpeg",
         Some("gif") => "image/gif",
         Some("svg") => "image/svg+xml",
-        Some("webp") => "image/webp", // 添加 WebP 支持
+        Some("webp") => "image/webp",
         Some("pdf") => "application/pdf",
         Some("txt") => "text/plain",
         Some("zip") => "application/zip",
@@ -97,7 +96,6 @@ fn guess_content_type(path: &Path) -> &'static str {
     }
 }
 
-/// 创建临时 WebP 文件路径
 fn create_temp_webp_path() -> PathBuf {
     let temp_dir = std::env::temp_dir();
     let uuid = uuid::Uuid::new_v4();

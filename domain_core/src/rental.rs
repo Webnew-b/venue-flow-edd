@@ -247,7 +247,6 @@ mod tests {
         let result = rental.cancel_rental(999, &clock);
 
         assert!(result.is_err());
-        // 使用 matches! 并检查内部的值
         assert!(matches!(
             result.err().unwrap(),
             DomainCoreError::RentalError(RentalError::RentalNotOwnedOrganizer(

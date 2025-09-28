@@ -95,7 +95,7 @@ impl OrganizerBuilder {
 mod tests {
     use super::*;
     use crate::domain_core_error::DomainCoreError;
-    use crate::user::{User, UserBuilder, UserGender}; // 确保 User 相关的结构被导入
+    use crate::user::{User, UserBuilder, UserGender};
     use crate::utils::Clock;
     use chrono::{Duration, TimeZone, Utc};
 
