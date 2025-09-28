@@ -1,5 +1,7 @@
 # 场地租赁系统 (Venue-Flow)
 
+[English](README.md) | 中文
+
 基于**副作用驱动设计（Effect-Driven Design, EDD）**架构理念开发的现代化场地租赁平台。
 
 ## 项目概述

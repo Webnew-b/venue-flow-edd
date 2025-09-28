@@ -1,5 +1,7 @@
 # Venue Rental System (Venue-Flow)
 
+English | [中文](README-zh.md)
+
 A modern venue rental platform built on **Effect-Driven Design (EDD)** architectural principles.
 
 ## Project Overview
