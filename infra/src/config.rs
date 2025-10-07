@@ -77,3 +77,9 @@ pub fn get_web_server_config() -> Result<(String, u16), ConfigError> {
 
     Ok((addr, port))
 }
+
+pub fn get_jwt_secret_key() -> Result<String, ConfigError> {
+    let key = "JWT_SECRET";
+    let content = get_env_value_from_key(key)?;
+    Ok(content)
+}

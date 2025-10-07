@@ -48,8 +48,14 @@ struct VenueWithLessor {
     pub lessor_avatar: String,
 }
 
-pub(crate) struct VenueService {
+pub struct VenueService {
     database: Arc<DatabaseConnection>,
+}
+
+impl VenueService {
+    pub fn new(database: Arc<DatabaseConnection>) -> Self {
+        Self { database }
+    }
 }
 
 pub(crate) fn venue_image_to_db(

@@ -130,10 +130,24 @@ pub(crate) fn db_lessor_to_domain(
     Ok(lessor)
 }
 
-pub(crate) struct UserService {
+pub struct UserService {
     database: Arc<DatabaseConnection>,
     redis: Arc<Mutex<Pool<RedisConnectionManager>>>,
     jwt_secret: Arc<String>,
+}
+
+impl UserService {
+    pub fn new(
+        database: Arc<DatabaseConnection>,
+        redis: Arc<Mutex<Pool<RedisConnectionManager>>>,
+        jwt_secret: Arc<String>,
+    ) -> Self {
+        Self {
+            database,
+            redis,
+            jwt_secret,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

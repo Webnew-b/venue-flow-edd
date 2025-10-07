@@ -70,8 +70,14 @@ pub(crate) fn db_rental_to_domain(
     Ok(rental)
 }
 
-pub(crate) struct RentalService {
+pub struct RentalService {
     database: Arc<DatabaseConnection>,
+}
+
+impl RentalService {
+    pub fn new(database: Arc<DatabaseConnection>) -> Self {
+        Self { database }
+    }
 }
 
 #[async_trait]

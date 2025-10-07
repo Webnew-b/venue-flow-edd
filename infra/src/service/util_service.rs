@@ -14,6 +14,7 @@ use domain::util_trait::{ImageRepository, PasswordHasher};
 use tokio::fs;
 
 use crate::infra_error::InfraError;
+use crate::repositroy::oss::config::OssClientConfig;
 use crate::repositroy::oss::image_file::{
     gen_uuid_image_name, save_file_to_oss, ImagePath,
 };
@@ -23,6 +24,17 @@ pub struct UtilService {
     oss_client: Arc<Client>,
     oss_bucket_name: String,
     oss_temp_file_path: String,
+}
+
+impl UtilService {
+    pub fn new(config: OssClientConfig) -> Self {
+        Self {
+            oss_domain: config.image_domain,
+            oss_client: Arc::new(config.client),
+            oss_bucket_name: config.bucket_name,
+            oss_temp_file_path: config.temp_folder,
+        }
+    }
 }
 
 async fn verify_image_type(path: &Path) -> Result<(), DomainError> {

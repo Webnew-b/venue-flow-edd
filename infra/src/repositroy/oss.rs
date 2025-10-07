@@ -4,6 +4,8 @@ use aws_sdk_s3::Client;
 use std::sync::Arc;
 use tracing::{error, info};
 
+use crate::infra_error::InfraError;
+
 use super::oss::config::*;
 
 pub mod config;
@@ -36,7 +38,7 @@ pub enum OssError {
     InvalidFileFormat,
 }
 
-pub async fn init_oss_client() -> Result<Arc<OssClientConfig>, OssError> {
+pub async fn init_oss_client() -> Result<OssClientConfig, InfraError> {
     info!("Initializing OSS client...");
 
     let config =
@@ -64,7 +66,7 @@ pub async fn init_oss_client() -> Result<Arc<OssClientConfig>, OssError> {
     info!("Region: {:?}", config.region);
     info!("Image domain: {}", oss_client_config.image_domain);
 
-    Ok(Arc::new(oss_client_config))
+    Ok(oss_client_config)
 }
 
 fn validate_oss_config(config: &OssConfig) -> Result<(), OssError> {
