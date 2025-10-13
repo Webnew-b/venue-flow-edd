@@ -29,15 +29,12 @@ use domain_core::user::lessor::LessorBuilder;
 use domain_core::user::organizer::{Organizer, OrganizerBuilder};
 use domain_core::user::{User, UserBuilder};
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-use r2d2::Pool;
-use r2d2_redis::RedisConnectionManager;
 use sea_orm::ActiveValue::{NotSet, Set};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait,
     QueryFilter,
 };
 use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
 
 pub mod enum_converstion;
 
@@ -132,14 +129,14 @@ pub(crate) fn db_lessor_to_domain(
 
 pub struct UserService {
     database: Arc<DatabaseConnection>,
-    redis: Arc<Mutex<Pool<RedisConnectionManager>>>,
+    redis: deadpool_redis::Pool,
     jwt_secret: Arc<String>,
 }
 
 impl UserService {
     pub fn new(
         database: Arc<DatabaseConnection>,
-        redis: Arc<Mutex<Pool<RedisConnectionManager>>>,
+        redis: deadpool_redis::Pool,
         jwt_secret: Arc<String>,
     ) -> Self {
         Self {

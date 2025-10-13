@@ -4,11 +4,15 @@ use thiserror::Error;
 use crate::config::ConfigError;
 use crate::database::DatabaseError;
 use crate::repositroy::oss::OssError;
+use crate::repositroy::redis::RedisError;
 
 #[derive(Debug, Error)]
 pub enum InfraError {
     #[error(transparent)]
     OssError(#[from] OssError),
+
+    #[error(transparent)]
+    RedisError(#[from] RedisError),
 
     #[error(transparent)]
     DatabaseError(#[from] DatabaseError),

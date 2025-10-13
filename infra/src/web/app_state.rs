@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use r2d2::Pool;
-use r2d2_redis::RedisConnectionManager;
 use sea_orm::DatabaseConnection;
-use tokio::sync::Mutex;
 
 use crate::config::get_jwt_secret_key;
 use crate::database::start_db_connection;
@@ -18,7 +15,7 @@ use crate::service::venue_service::VenueService;
 #[derive(Clone)]
 pub struct AppState {
     pub db: Arc<DatabaseConnection>,
-    pub redis: Arc<Mutex<Pool<RedisConnectionManager>>>,
+    pub redis: deadpool_redis::Pool,
     pub user_service: Arc<UserService>,
     pub venue_service: Arc<VenueService>,
     pub rental_service: Arc<RentalService>,
