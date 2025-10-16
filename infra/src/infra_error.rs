@@ -3,6 +3,7 @@ use thiserror::Error;
 
 use crate::config::ConfigError;
 use crate::database::DatabaseError;
+use crate::queue::queue_error::QueueError;
 use crate::repositroy::oss::OssError;
 use crate::repositroy::redis::RedisError;
 
@@ -19,6 +20,9 @@ pub enum InfraError {
 
     #[error(transparent)]
     ConfigError(#[from] ConfigError),
+
+    #[error(transparent)]
+    QueueError(#[from] QueueError),
 
     #[error("Fail to construct the log executor.")]
     FailToConstructLog,

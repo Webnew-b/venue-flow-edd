@@ -1,4 +1,7 @@
+use std::fmt::Display;
+
 use domain::event_trait::EventExecutionMode;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppEventList {
@@ -36,7 +39,7 @@ impl AppEventList {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum AppEvent {
     LogUseCase,
 
