@@ -41,6 +41,7 @@ chrono = "0.4.41"
 aws-config = { version = "1.5", features = ["behavior-version-latest"] }
 aws-sdk-s3 = "1.51"
 anyhow = "1.0.100"
+config = "0.15.18"
 
 [dependencies.uuid]
 version = "1.11.0"

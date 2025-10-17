@@ -7,6 +7,8 @@ use crate::queue::queue_error::QueueError;
 use crate::repositroy::oss::OssError;
 use crate::repositroy::redis::RedisError;
 
+pub(crate) type InfraResult<T> = std::result::Result<T, InfraError>;
+
 #[derive(Debug, Error)]
 pub enum InfraError {
     #[error(transparent)]
@@ -47,6 +49,9 @@ pub enum InfraError {
 
     #[error("File type is invalid.")]
     FileTypeIsInvalid,
+
+    #[error("Failed to initizalize event system:{message}")]
+    FailToInitEventSystem { message: String },
 }
 
 impl From<InfraError> for DomainError {

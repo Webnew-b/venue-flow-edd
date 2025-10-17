@@ -4,6 +4,7 @@ pub mod config;
 pub mod database;
 pub mod infra_error;
 pub mod local_log;
+pub mod queue;
 pub mod repositroy;
 pub mod service;
 pub mod web;
