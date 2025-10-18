@@ -2,7 +2,6 @@ use actix_web::body::BoxBody;
 use actix_web::dev::{ServiceRequest, ServiceResponse};
 use actix_web::middleware::{ErrorHandlerResponse, Next};
 use actix_web::{Error, HttpResponse};
-use log::info;
 
 use crate::api::response_code::CodeEnum;
 use crate::api::CustomResponse;
@@ -17,7 +16,7 @@ pub async fn encrypt_middleware(
 
     match auth {
         Some(e) => {
-            info!("{:?}", e);
+            tracing::info!("{:?}", e);
         },
         None => {
             let c_res = CustomResponse::<()>::new(
@@ -36,7 +35,7 @@ pub async fn encrypt_middleware(
         },
     };
 
-    info!("you request this middleware.");
+    tracing::info!("you request this middleware.");
     next.call(req).await
 }
 

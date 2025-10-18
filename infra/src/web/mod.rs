@@ -1,9 +1,6 @@
-use std::io::{Error, ErrorKind};
-
 use actix_web::http::StatusCode;
 use actix_web::middleware::ErrorHandlers;
 use actix_web::{web, App, HttpServer};
-use log::{log, Level};
 use tracing_actix_web::{
     DefaultRootSpanBuilder, RootSpanBuilder, TracingLogger,
 };
@@ -11,6 +8,7 @@ use tracing_actix_web::{
 use crate::api::middleware::encrypt::add_service_error_handle;
 use crate::api::{self, default_service_handle_error};
 use crate::config::get_web_server_config;
+use crate::infra_error::InfraError;
 use crate::web::app_state::create_app_state;
 
 pub mod app_state;
@@ -59,8 +57,10 @@ pub async fn start_web_server() -> anyhow::Result<()> {
     })
     .bind(config)
     .map_err(|e| {
-        log!(Level::Error, "{}", e.to_string());
-        Error::new(ErrorKind::AddrNotAvailable, "Binding the server addr fail.")
+        tracing::error!("{}", e);
+        InfraError::FailToInitHttpServer {
+            message: e.to_string(),
+        }
     })?;
 
     server.run().await?;

@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use domain_core::user::lessor::Lessor;
 use domain_core::venue::venue_image::VenueImage;
-use domain_core::venue::venue_update::VenueUpdate;
 use domain_core::venue::Venue;
 
 use crate::domain_error::DomainError;
