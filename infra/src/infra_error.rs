@@ -52,6 +52,9 @@ pub enum InfraError {
 
     #[error("Failed to initizalize event system:{message}")]
     FailToInitEventSystem { message: String },
+
+    #[error("Failed to initizalize http server:{message}")]
+    FailToInitHttpServer { message: String },
 }
 
 impl From<InfraError> for DomainError {

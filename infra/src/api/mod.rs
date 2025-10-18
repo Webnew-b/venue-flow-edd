@@ -1,13 +1,20 @@
 use core::fmt;
 
-use actix_web::{HttpResponse, Responder, ResponseError};
+use actix_web::{web, HttpResponse, Responder, ResponseError};
 use serde::{Deserialize, Serialize};
 
 use crate::api::response_code::{get_code, CodeEnum};
 
 pub mod example;
 pub(crate) mod middleware;
+pub mod rental;
 pub(crate) mod response_code;
+pub mod user;
+pub mod venue;
+
+pub fn api_route(cfg: &mut web::ServiceConfig) {
+    cfg.service(web::scope("/api").service(self::user::index()));
+}
 
 #[derive(Serialize)]
 pub struct CustomResponse<T: Serialize + for<'de> Deserialize<'de>> {

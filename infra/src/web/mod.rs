@@ -53,7 +53,7 @@ pub async fn start_web_server() -> anyhow::Result<()> {
             )
             .default_service(web::route().to(default_service_handle_error))
             .app_data(web::Data::new(state.clone()))
-            .configure(api::example::router)
+            .configure(api::api_route)
     })
     .bind(config)
     .map_err(|e| {
