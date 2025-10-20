@@ -1,0 +1,5 @@
+[queue_config]
+queue_prefix="venue_flow"
+processing_timeout=7200
+failed_retention=1800
+max_pool_size=10
