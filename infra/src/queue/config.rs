@@ -5,7 +5,7 @@ use crate::{infra_error::InfraError, queue::queue_error::QueueError};
 
 pub(super) fn get_redis_queue_config() -> Result<RedisQueueConfig, InfraError> {
     let config: QueueConfig = Config::builder()
-        .add_source(File::with_name("config/redis_eeeee.toml"))
+        .add_source(File::with_name("config/redis_queue.toml"))
         .build()
         .map_err(|e| {
             log::error!("{}", e);

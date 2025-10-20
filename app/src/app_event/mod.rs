@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use domain::event_trait::EventExecutionMode;
 use serde::{Deserialize, Serialize};
 
