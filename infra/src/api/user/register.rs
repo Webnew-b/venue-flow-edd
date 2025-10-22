@@ -1,18 +1,13 @@
-use std::{
-    ops::Deref,
-    path::{Path, PathBuf},
-};
+use std::ops::Deref;
 
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 use actix_web::{post, web, HttpResponse};
-use chrono::Utc;
-use domain_core::utils::Clock;
-use image::{ImageFormat, ImageReader};
-use uuid::Uuid;
 
 use crate::{
-    api::{CustomResponse, CustomResponseError},
-    infra_error::{InfraError, InfraResult},
+    api::{
+        user::{upload_image, UserClock},
+        CustomResponse, CustomResponseError,
+    },
     web::app_state::AppState,
 };
 
@@ -27,66 +22,12 @@ struct Upload {
     pub file: TempFile,
 }
 
-fn verify_image_type(path: &Path) -> InfraResult<()> {
-    if !path.exists() {
-        return Err(InfraError::FileNotFound);
-    }
-
-    let reader = ImageReader::open(path).map_err(|e| {
-        tracing::error!("{}", e.to_string());
-        InfraError::FileTypeIsInvalid
-    })?;
-    let reader = reader.with_guessed_format().map_err(|e| {
-        tracing::error!("{}", e.to_string());
-        InfraError::FileTypeIsInvalid
-    })?;
-    let fmt = reader.format();
-
-    match fmt {
-        Some(ImageFormat::Png)
-        | Some(ImageFormat::Jpeg)
-        | Some(ImageFormat::Gif) => Ok(()),
-        _ => Err(InfraError::FileTypeIsInvalid),
-    }
-}
-
-struct UserClock;
-
-impl Clock for UserClock {
-    fn now(&self) -> chrono::DateTime<chrono::Utc> {
-        Utc::now()
-    }
-}
-
 #[post("/register")]
 pub async fn register(
     state: web::Data<AppState>,
     MultipartForm(form): MultipartForm<Upload>,
 ) -> Result<HttpResponse, CustomResponseError> {
-    let original_name = form.file.file_name.as_deref().unwrap_or("unknown");
-
-    let ext = std::path::Path::new(original_name)
-        .extension()
-        .and_then(|s| s.to_str())
-        .ok_or(CustomResponseError::BadRequest(
-            "The file must be a image".to_string(),
-        ))?;
-
-    let unique_name = Uuid::new_v4().simple().to_string();
-
-    let save_path: PathBuf = ["./temp", &unique_name, ext].iter().collect();
-
-    verify_image_type(save_path.as_path()).map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(
-            "The File format must be image".to_string(),
-        )
-    })?;
-
-    let _ = form.file.file.persist(save_path.as_path()).map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::ServiceError
-    })?;
+    let save_path = upload_image(&form.file)?;
 
     let register_data = app::commands::user_commands::RegisterUserCommand {
         username: form.username.0,
