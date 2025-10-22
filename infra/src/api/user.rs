@@ -1,14 +1,14 @@
 use std::path::{Path, PathBuf};
 
 use actix_multipart::form::tempfile::TempFile;
-use actix_web::{web, Scope};
+use actix_web::{middleware::from_fn, web, Scope};
 use chrono::Utc;
 use domain_core::utils::Clock;
 use image::{ImageFormat, ImageReader};
 use uuid::Uuid;
 
 use crate::{
-    api::CustomResponseError,
+    api::{middleware::encrypt::encrypt_middleware, CustomResponseError},
     infra_error::{InfraError, InfraResult},
 };
 
@@ -17,6 +17,8 @@ pub mod logout;
 pub mod register;
 pub mod register_lessor;
 pub mod register_organizer;
+pub mod update_profile;
+
 fn verify_image_type(path: &Path) -> InfraResult<()> {
     if !path.exists() {
         return Err(InfraError::FileNotFound);
@@ -41,9 +43,15 @@ fn verify_image_type(path: &Path) -> InfraResult<()> {
 }
 
 pub fn index() -> Scope {
+    let m = from_fn(encrypt_middleware);
     web::scope("/user")
         .service(self::login::login)
         .service(self::register::register)
+        .service(
+            web::scope("")
+                .wrap(m)
+                .service(self::update_profile::update_user),
+        )
 }
 
 pub(super) struct UserClock;
