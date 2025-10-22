@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use actix_web::{get, web, HttpResponse};
+use actix_web::{post, web, HttpResponse};
 use app::commands::user_commands::{Email, LoginUserCommand, UserLoginType};
 use garde::Validate;
 use serde::{Deserialize, Serialize};
@@ -49,7 +49,7 @@ fn get_login_command(
     Ok(res)
 }
 
-#[get("/login")]
+#[post("/login")]
 pub async fn login(
     state: web::Data<AppState>,
     login_data: web::Json<LoginData>,
