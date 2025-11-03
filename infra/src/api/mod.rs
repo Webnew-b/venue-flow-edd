@@ -2,13 +2,18 @@ use core::fmt;
 use std::path::{Path, PathBuf};
 
 use actix_multipart::form::tempfile::TempFile;
-use actix_web::{web, HttpResponse, Responder, ResponseError};
+use actix_web::{
+    middleware::from_fn, web, HttpResponse, Responder, ResponseError,
+};
 use image::{ImageFormat, ImageReader};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    api::response_code::{get_code, CodeEnum},
+    api::{
+        middleware::encrypt::encrypt_middleware,
+        response_code::{get_code, CodeEnum},
+    },
     infra_error::{InfraError, InfraResult},
 };
 
@@ -20,7 +25,11 @@ pub mod user;
 pub mod venue;
 
 pub fn api_route(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/api").service(self::user::index()));
+    cfg.service(
+        web::scope("/api")
+            .service(self::user::index())
+            .service(self::rental::index().wrap(from_fn(encrypt_middleware))),
+    );
 }
 
 #[derive(Serialize)]
