@@ -13,6 +13,7 @@ pub fn index() -> Scope {
         .service(self::create_rental_req::create_rental_req)
         .service(self::process_rental_req::approve_rental_request)
         .service(self::process_rental_req::reject_rental_request)
+        .service(self::cannel_rental_req::cancel_rental_request)
 }
 
 pub(super) struct RentalClock;
