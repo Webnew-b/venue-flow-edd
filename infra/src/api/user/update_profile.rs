@@ -30,7 +30,7 @@ pub async fn update_user(
     state: web::Data<AppState>,
 ) -> Result<HttpResponse, CustomResponseError> {
     let save_path = match form.avatar {
-        Some(e) => Some(upload_image(&e)?),
+        Some(e) => Some(upload_image(e)?),
         None => None,
     };
     let update = UpdateUserCommand {

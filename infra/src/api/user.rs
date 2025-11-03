@@ -12,6 +12,7 @@ use crate::{
     infra_error::{InfraError, InfraResult},
 };
 
+pub mod get_user_profile;
 pub mod login;
 pub mod logout;
 pub mod register;
@@ -43,14 +44,18 @@ fn verify_image_type(path: &Path) -> InfraResult<()> {
 }
 
 pub fn index() -> Scope {
-    let m = from_fn(encrypt_middleware);
     web::scope("/user")
         .service(self::login::login)
         .service(self::register::register)
         .service(
             web::scope("")
-                .wrap(m)
+                .wrap(from_fn(encrypt_middleware))
                 .service(self::update_profile::update_user),
+        )
+        .service(
+            web::scope("")
+                .wrap(from_fn(encrypt_middleware))
+                .service(self::get_user_profile::get_user_profile),
         )
 }
 
@@ -63,9 +68,9 @@ impl Clock for UserClock {
 }
 
 pub(super) fn upload_image(
-    file: &TempFile,
+    file: TempFile,
 ) -> Result<PathBuf, CustomResponseError> {
-    let original_name = file.file_name.as_deref().unwrap_or("unknown");
+    let original_name = &file.file_name.as_deref().unwrap_or("unknown");
 
     let ext = std::path::Path::new(original_name)
         .extension()
@@ -76,7 +81,8 @@ pub(super) fn upload_image(
 
     let unique_name = Uuid::new_v4().simple().to_string();
 
-    let save_path: PathBuf = ["./temp", &unique_name, ext].iter().collect();
+    //TODO Configure temprary file path
+    let save_path: PathBuf = ["./temp/", &unique_name, ext].iter().collect();
 
     verify_image_type(save_path.as_path()).map_err(|e| {
         tracing::error!("{}", e);
