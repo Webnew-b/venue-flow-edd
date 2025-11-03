@@ -4,10 +4,7 @@ use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 use actix_web::{post, web, HttpResponse};
 
 use crate::{
-    api::{
-        user::{upload_image, UserClock},
-        CustomResponse, CustomResponseError,
-    },
+    api::{upload_image, user::UserClock, CustomResponse, CustomResponseError},
     web::app_state::AppState,
 };
 

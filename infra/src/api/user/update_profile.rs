@@ -5,10 +5,7 @@ use actix_web::{post, web, HttpResponse};
 use app::commands::user_commands::UpdateUserCommand;
 
 use crate::{
-    api::{
-        user::{upload_image, UserClock},
-        CustomResponse, CustomResponseError,
-    },
+    api::{upload_image, user::UserClock, CustomResponse, CustomResponseError},
     web::app_state::AppState,
 };
 
