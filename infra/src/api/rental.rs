@@ -1,8 +1,6 @@
-use actix_web::{middleware::from_fn, web, Scope};
+use actix_web::{web, Scope};
 use chrono::Utc;
 use domain_core::utils::Clock;
-
-use crate::api::middleware::encrypt::encrypt_middleware;
 
 pub mod cannel_rental_req;
 pub mod create_rental_req;
@@ -11,7 +9,10 @@ pub mod process_rental_req;
 pub mod view_rental_req;
 
 pub fn index() -> Scope {
-    web::scope("/rental").service(self::create_rental_req::create_rental_req)
+    web::scope("/rental")
+        .service(self::create_rental_req::create_rental_req)
+        .service(self::process_rental_req::approve_rental_request)
+        .service(self::process_rental_req::reject_rental_request)
 }
 
 pub(super) struct RentalClock;
