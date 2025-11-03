@@ -5,7 +5,7 @@ use domain_core::utils::Clock;
 use crate::app_error::{AppError, AppResult};
 use crate::{AppUseCase, Outcome};
 
-pub async fn reject_rental_request(
+pub async fn update_rental_time(
     repo: &impl RentalRespository,
     organizer_id: i64,
     time_range: (DateTime<Utc>, DateTime<Utc>),
