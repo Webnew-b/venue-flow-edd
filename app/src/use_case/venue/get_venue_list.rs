@@ -5,7 +5,7 @@ use domain::PageLimit;
 use crate::app_error::AppResult;
 use crate::{AppUseCase, Outcome};
 
-pub async fn get_venue_by_user(
+pub async fn get_venue_list(
     venue_repo: &impl VenueRepository,
     p: PageLimit,
 ) -> AppResult<Outcome<Vec<IndexVenue>>> {
