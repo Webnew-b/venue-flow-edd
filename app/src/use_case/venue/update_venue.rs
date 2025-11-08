@@ -1,19 +1,18 @@
 use domain::util_trait::ImageRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::utils::Clock;
+use domain_core::venue::venue_image::VenueImage;
 use domain_core::venue::venue_update::VenueUpdate;
 
 use crate::app_error::{AppError, AppResult};
 use crate::commands::venue_commands::{
     ImageDeleteCommand, ImageUploadCommand, ImageUploadRes, UpdateVenueCommand,
 };
-use crate::use_case::venue::create_venue::{
-    create_image_data, save_image_data,
-};
+use crate::use_case::venue::create_venue::save_image_data;
 use crate::{AppUseCase, Outcome};
 
-async fn get_update_struct<'image>(
-    update: UpdateVenueCommand<'image>,
+async fn get_update_struct(
+    update: UpdateVenueCommand,
 ) -> AppResult<VenueUpdate> {
     let mut update_struct = VenueUpdate::new();
 
@@ -34,9 +33,27 @@ async fn get_update_struct<'image>(
     Ok(update_struct)
 }
 
-pub async fn update_venue<'image>(
+async fn create_image_data(
+    image_repo: &impl ImageRepository,
+    time: &impl Clock,
+    venue_id: i64,
+    upload_image: ImageUploadCommand,
+) -> AppResult<VenueImage> {
+    let uri = image_repo.upload_image(&upload_image.image).await?;
+    let images = VenueImage {
+        id: None,
+        venue_id: venue_id.clone(),
+        title: upload_image.title,
+        uri,
+        comment: upload_image.comment,
+        createtime: time.now(),
+    };
+    Ok(images)
+}
+
+pub async fn update_venue(
     repo: &impl VenueRepository,
-    update: UpdateVenueCommand<'image>,
+    update: UpdateVenueCommand,
     clock: &impl Clock,
 ) -> AppResult<Outcome<()>> {
     let id = update.id;
@@ -50,20 +67,18 @@ pub async fn update_venue<'image>(
         }
     })?;
     repo.save_venue(venue).await?;
-    Ok(Outcome::new((), AppUseCase::BasicUserProfile))
+    Ok(Outcome::new((), AppUseCase::EditVenue))
 }
 
-pub async fn upload_image<'image>(
+pub async fn upload_image(
     repo: &impl VenueRepository,
     image_repo: &impl ImageRepository,
     time: &impl Clock,
-    images: ImageUploadCommand<'image>,
+    images: ImageUploadCommand,
 ) -> AppResult<Outcome<ImageUploadRes>> {
     let venue_id = images.venue_id;
-    let res =
-        create_image_data(image_repo, time, venue_id, images.images.as_ref())
-            .await?;
-    let images = save_image_data(repo, res).await?;
+    let res = create_image_data(image_repo, time, venue_id, images).await?;
+    let images = save_image_data(repo, vec![res]).await?;
     Ok(Outcome::new(
         ImageUploadRes { venue_id, images },
         AppUseCase::UploadVenueImage,

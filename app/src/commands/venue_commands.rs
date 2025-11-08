@@ -1,22 +1,22 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use domain::domain_error::{domain_venue_error::DomainVenueError, DomainError};
 use domain_core::venue::venue_image::VenueImage;
 use domain_core::venue::VenueStatus;
 use serde::{Deserialize, Serialize};
 
-pub struct CreateVenueCommand<'image> {
+pub struct CreateVenueCommand {
     pub user_id: i64,
     pub name: String,
     pub address: String,
-    pub images: Vec<VenueImageCommand<'image>>,
+    pub images: Vec<VenueImageCommand>,
     pub capacity: i32,
     pub description: String,
 }
 
-pub struct VenueImageCommand<'image> {
+pub struct VenueImageCommand {
     pub title: String,
-    pub image: &'image Path,
+    pub image: String,
     pub comment: Option<String>,
 }
 
@@ -73,18 +73,19 @@ pub struct ManageVenueRes {
     pub status: VenueStatusRes,
 }
 
-pub struct UpdateVenueCommand<'image> {
+pub struct UpdateVenueCommand {
     pub id: i64,
     pub name: Option<String>,
     pub address: Option<String>,
-    pub images: Vec<VenueImageCommand<'image>>,
     pub capacity: Option<i32>,
     pub description: Option<String>,
 }
 
-pub struct ImageUploadCommand<'image> {
+pub struct ImageUploadCommand {
     pub venue_id: i64,
-    pub images: Vec<VenueImageCommand<'image>>,
+    pub title: String,
+    pub image: PathBuf,
+    pub comment: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

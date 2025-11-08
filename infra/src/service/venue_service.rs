@@ -272,7 +272,7 @@ impl VenueRepository for VenueService {
     }
 
     async fn save_venue(&self, v: Venue) -> Result<(), DomainError> {
-        let (venue, _venue_images) = domain_venue_to_db(v);
+        let (venue, _) = domain_venue_to_db(v);
         venue.save(self.database.deref()).await.map_err(|e| {
             log::error!("{}", e);
             InfraError::DatabaseError(DatabaseError::SaveEntityFail)

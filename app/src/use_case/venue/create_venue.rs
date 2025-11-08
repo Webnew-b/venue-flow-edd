@@ -9,7 +9,7 @@ use garde::Validate;
 
 use crate::app_error::{AppError, AppResult};
 use crate::commands::venue_commands::{
-    CreateVenueCommand, CreateVenueRes, VenueImageCommand, VenueImageRes,
+    CreateVenueCommand, CreateVenueRes, VenueImageRes,
 };
 use crate::{AppUseCase, Outcome};
 
@@ -28,34 +28,10 @@ pub(super) async fn save_image_data(
     Ok(res_image)
 }
 
-pub(super) async fn create_image_data<'image>(
-    image_repo: &impl ImageRepository,
-    time: &impl Clock,
-    venue_id: i64,
-    upload_images: &[VenueImageCommand<'image>],
-) -> AppResult<Vec<VenueImage>> {
-    let mut images: Vec<VenueImage> = vec![];
-
-    for item in upload_images {
-        let uri = image_repo.upload_image(item.image).await?;
-        images.push(VenueImage {
-            id: None,
-            venue_id,
-            title: item.title.to_string(),
-            uri,
-            comment: item.comment.clone(),
-            createtime: time.now(),
-        });
-    }
-
-    Ok(images)
-}
-
-pub async fn create_venue<'image>(
+pub async fn create_venue(
     user_repo: &impl UserRepository,
     venue_repo: &impl VenueRepository,
-    image_repo: &impl ImageRepository,
-    venue_create: CreateVenueCommand<'image>,
+    venue_create: CreateVenueCommand,
     time: &impl Clock,
 ) -> AppResult<Outcome<CreateVenueRes>> {
     let lessor = user_repo
@@ -96,13 +72,18 @@ pub async fn create_venue<'image>(
     let images = if venue_create.images.is_empty() {
         vec![]
     } else {
-        let images = create_image_data(
-            image_repo,
-            time,
-            id,
-            venue_create.images.as_ref(),
-        )
-        .await?;
+        let images = venue_create
+            .images
+            .into_iter()
+            .map(|item| VenueImage {
+                id: None,
+                venue_id: id.clone(),
+                title: item.title.to_string(),
+                uri: item.image.to_string(),
+                comment: item.comment.clone(),
+                createtime: time.now(),
+            })
+            .collect();
 
         save_image_data(venue_repo, images).await?
     };
