@@ -20,7 +20,11 @@ pub fn index() -> Scope {
                 .service(self::get_venue_by_user::get_venue_by_user)
                 .service(self::create_venue::create_venue)
                 .service(self::update_venue::update_venue)
-                .service(self::upload_venue_image::upload_venue_image),
+                .service(self::update_venue::update_venue_image)
+                .service(self::update_venue::delete_venue_image)
+                .service(self::upload_venue_image::upload_venue_image)
+                .service(self::manage_venue_status::publish_venue)
+                .service(self::manage_venue_status::unpublish_venue),
         )
         .service(self::get_venue::get_venue)
         .service(self::get_venue_list::get_venue_list)

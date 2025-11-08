@@ -3,8 +3,7 @@ use std::ops::Deref;
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 use actix_web::{post, web, HttpResponse};
 use app::commands::venue_commands::{
-    CreateVenueCommand, ImageDeleteCommand, ImageUploadCommand,
-    UpdateVenueCommand, VenueImageCommand,
+    ImageDeleteCommand, ImageUploadCommand, UpdateVenueCommand,
 };
 use serde::{Deserialize, Serialize};
 
@@ -127,7 +126,7 @@ pub async fn delete_venue_image(
         CustomResponseError::BadRequest(e.to_string())
     })?;
 
-    let res = state.event_system.process_outcome(res).await.map_err(|e| {
+    let _ = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);
         CustomResponseError::ServiceError
     })?;
