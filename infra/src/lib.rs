@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 pub mod api;
 pub mod command;
 pub mod config;

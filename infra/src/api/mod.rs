@@ -66,6 +66,7 @@ impl<T: Serialize + for<'de> Deserialize<'de>> CustomResponse<T> {
 }
 
 #[derive(Debug)]
+#[allow(unused)]
 pub(crate) enum CustomResponseError {
     NotFound(String),
     BadRequest(String),

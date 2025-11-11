@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use std::fmt::Display;
 
 use util_macros::IteralDisplay;

@@ -31,6 +31,7 @@ pub fn change_image_type(
         })
 }
 
+#[allow(unused)]
 fn change_path_extension(source_path: &Path) -> Result<PathBuf, InfraError> {
     let parent_path = match source_path.parent() {
         Some(p) => p,
@@ -78,6 +79,7 @@ async fn upload_object(
     Ok(etag)
 }
 
+#[allow(unused)]
 fn guess_content_type(path: &Path) -> &'static str {
     match path.extension().and_then(|ext| ext.to_str()) {
         Some("html") | Some("htm") => "text/html",
