@@ -7,7 +7,6 @@ use async_trait::async_trait;
 use aws_sdk_s3::Client;
 use bcrypt::{hash, verify, DEFAULT_COST};
 use domain::domain_error::DomainError;
-use image::{ImageFormat, ImageReader};
 
 use domain::domain_error::domain_user_error::DomainUserError;
 use domain::util_trait::{ImageRepository, PasswordHasher};
@@ -34,29 +33,6 @@ impl UtilService {
             oss_bucket_name: config.bucket_name,
             oss_temp_file_path: config.temp_folder,
         }
-    }
-}
-
-async fn verify_image_type(path: &Path) -> Result<(), DomainError> {
-    if !path.exists() {
-        return Err(InfraError::FileNotFound.into());
-    }
-
-    let reader = ImageReader::open(path).map_err(|e| {
-        tracing::error!("{}", e.to_string());
-        InfraError::FileNotRead
-    })?;
-    let reader = reader.with_guessed_format().map_err(|e| {
-        tracing::error!("{}", e.to_string());
-        InfraError::FileTypeIsInvalid
-    })?;
-    let fmt = reader.format();
-
-    match fmt {
-        Some(ImageFormat::Png)
-        | Some(ImageFormat::Jpeg)
-        | Some(ImageFormat::Gif) => Ok(()),
-        _ => Err(InfraError::FileTypeIsInvalid.into()),
     }
 }
 

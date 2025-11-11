@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use domain::domain_error::{domain_venue_error::DomainVenueError, DomainError};
 use domain_core::venue::venue_image::VenueImage;

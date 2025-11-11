@@ -1,6 +1,5 @@
 use domain::domain_error::DomainError;
 use domain::user_domain::UserRepository;
-use domain::util_trait::ImageRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::utils::Clock;
 use domain_core::venue::venue_image::VenueImage;

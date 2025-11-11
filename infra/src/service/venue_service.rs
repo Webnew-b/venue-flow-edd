@@ -44,7 +44,6 @@ struct VenueWithLessor {
     pub venue_name: String,
     pub venue_address: String,
     pub lessor_id: i64,
-    pub lessor_name: String,
     pub lessor_avatar: String,
 }
 
