@@ -58,6 +58,9 @@ pub enum InfraError {
 
     #[error("Failed to decode the JWT:{message}")]
     FailToDecodeJWT { message: String },
+
+    #[error("Access denied")]
+    AccessDenied,
 }
 
 impl From<InfraError> for DomainError {
