@@ -51,7 +51,7 @@ pub async fn login_user(
 
     password_hash.verify(password.as_str(), user.password())?;
 
-    let token = generator.generate_token(&user)?.token;
+    let token = generator.generate_token(&user).await?.token;
 
     let id = user.id().ok_or(AppError::IdInexisted("user".to_string()))?;
     let res = LoginedRes {

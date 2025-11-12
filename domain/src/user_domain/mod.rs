@@ -15,8 +15,9 @@ pub trait UserValidation: Sync + Send {
     async fn exist_email(&self, email: &str) -> Result<(), DomainError>;
 }
 
+#[async_trait]
 pub trait UserGenerator: Sync + Send {
-    fn generate_token(
+    async fn generate_token(
         &self,
         user: &User,
     ) -> Result<UserLoginToken, DomainError>;

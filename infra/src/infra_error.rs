@@ -55,6 +55,9 @@ pub enum InfraError {
 
     #[error("Failed to initizalize http server:{message}")]
     FailToInitHttpServer { message: String },
+
+    #[error("Failed to decode the JWT:{message}")]
+    FailToDecodeJWT { message: String },
 }
 
 impl From<InfraError> for DomainError {

@@ -28,8 +28,14 @@ use domain_core::user::lessor::Lessor;
 use domain_core::user::lessor::LessorBuilder;
 use domain_core::user::organizer::{Organizer, OrganizerBuilder};
 use domain_core::user::{User, UserBuilder};
+use jsonwebtoken::decode;
+use jsonwebtoken::errors::ErrorKind;
+use jsonwebtoken::DecodingKey;
+use jsonwebtoken::TokenData;
+use jsonwebtoken::Validation;
 use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
 use sea_orm::ActiveValue::{NotSet, Set};
+use sea_orm::QuerySelect;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, ModelTrait,
     QueryFilter,
@@ -129,29 +135,60 @@ pub(crate) fn db_lessor_to_domain(
 
 pub struct UserService {
     database: Arc<DatabaseConnection>,
-    redis: deadpool_redis::Pool,
+    _redis: deadpool_redis::Pool,
     jwt_secret: Arc<String>,
 }
 
 impl UserService {
+    pub(crate) async fn decode_token(
+        &self,
+        token: &str,
+    ) -> Result<Claims, InfraError> {
+        let validation = Validation::new(Algorithm::HS256);
+
+        match decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(self.jwt_secret.as_bytes()),
+            &validation,
+        ) {
+            Ok(TokenData { claims, .. }) => Ok(claims),
+
+            Err(e) => match e.kind() {
+                ErrorKind::InvalidToken => Err(InfraError::FailToDecodeJWT {
+                    message: "Invalid token".to_string(),
+                }),
+                ErrorKind::ExpiredSignature => {
+                    Err(InfraError::FailToDecodeJWT {
+                        message: "Token expired".to_string(),
+                    })
+                },
+                _ => Err(InfraError::FailToDecodeJWT {
+                    message: e.to_string(),
+                }),
+            },
+        }
+    }
+
     pub fn new(
         database: Arc<DatabaseConnection>,
-        redis: deadpool_redis::Pool,
+        _redis: deadpool_redis::Pool,
         jwt_secret: Arc<String>,
     ) -> Self {
         Self {
             database,
-            redis,
+            _redis,
             jwt_secret,
         }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    company: String,
-    exp: usize,
+pub(crate) struct Claims {
+    pub sub: String,
+    pub username: String,
+    pub lessor_id: Option<String>,
+    pub organizer_id: Option<String>,
+    pub exp: usize,
 }
 
 impl UserService {
@@ -206,16 +243,41 @@ impl UserService {
     }
 }
 
+#[async_trait]
 impl UserGenerator for UserService {
-    fn generate_token(
+    async fn generate_token(
         &self,
         user: &User,
     ) -> Result<UserLoginToken, DomainError> {
         let id = user.id().expect("The user id must be exsited.");
+        let lessor_id = LessorCrate::Entity::find()
+            .filter(LessorCrate::Column::UserId.eq(id))
+            .select_only()
+            .column(LessorCrate::Column::Id)
+            .into_tuple::<i64>()
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                InfraError::DatabaseError(DatabaseError::SelectFail)
+            })?;
+        let organizer_id = OrganizerCrate::Entity::find()
+            .filter(OrganizerCrate::Column::UserId.eq(id))
+            .select_only()
+            .column(OrganizerCrate::Column::Id)
+            .into_tuple::<i64>()
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                InfraError::DatabaseError(DatabaseError::SelectFail)
+            })?;
         let claims = Claims {
             sub: id.to_string(),
-            company: "lexon".to_owned(),
             exp: (Utc::now() + Duration::hours(2)).timestamp() as usize,
+            username: user.username().to_string(),
+            lessor_id: lessor_id.map(|x| x.to_string()),
+            organizer_id: organizer_id.map(|x| x.to_string()),
         };
 
         let header = Header::new(Algorithm::HS256);
