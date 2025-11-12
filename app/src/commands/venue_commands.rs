@@ -75,6 +75,7 @@ pub struct ManageVenueRes {
 
 pub struct UpdateVenueCommand {
     pub id: i64,
+    pub lessor_id: i64,
     pub name: Option<String>,
     pub address: Option<String>,
     pub capacity: Option<i32>,
@@ -82,6 +83,7 @@ pub struct UpdateVenueCommand {
 }
 
 pub struct ImageUploadCommand {
+    pub lessor_id: i64,
     pub venue_id: i64,
     pub title: String,
     pub image: PathBuf,
@@ -95,6 +97,7 @@ pub struct ImageUploadRes {
 }
 
 pub struct ImageDeleteCommand {
+    pub lessor_id: i64,
     pub image_id: Vec<i64>,
     pub venue_id: i64,
 }

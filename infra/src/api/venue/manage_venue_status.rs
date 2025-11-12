@@ -1,10 +1,13 @@
 use std::ops::Deref;
 
-use actix_web::{post, web, HttpResponse};
+use actix_web::{post, web, HttpRequest, HttpResponse};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    api::{venue::VenueClock, CustomResponse, CustomResponseError},
+    api::{
+        venue::{get_lessor_and_user_id, VenueClock},
+        CustomResponse, CustomResponseError,
+    },
     web::app_state::AppState,
 };
 
@@ -15,14 +18,17 @@ struct Data {
 
 #[post("/publish_venue")]
 pub async fn publish_venue(
+    req: HttpRequest,
     state: web::Data<AppState>,
     data: web::Json<Data>,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let (_user_id, lessor_id) = get_lessor_and_user_id(req)?;
     let time = VenueClock;
     let res = app::use_case::venue::manage_venue_status::publish_venue(
         state.venue_service.deref(),
         &time,
         data.venue_id,
+        lessor_id,
     )
     .await
     .map_err(|e| {
@@ -41,14 +47,17 @@ pub async fn publish_venue(
 
 #[post("/unpublish_venue")]
 pub async fn unpublish_venue(
+    req: HttpRequest,
     state: web::Data<AppState>,
     data: web::Json<Data>,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let (_user_id, lessor_id) = get_lessor_and_user_id(req)?;
     let time = VenueClock;
     let res = app::use_case::venue::manage_venue_status::unpublish_venue(
         state.venue_service.deref(),
         &time,
         data.venue_id,
+        lessor_id,
     )
     .await
     .map_err(|e| {

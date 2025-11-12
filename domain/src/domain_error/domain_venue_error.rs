@@ -13,4 +13,7 @@ pub enum DomainVenueError {
 
     #[error("Image id must be exsit while construct the 'VenueImageRes'")]
     ImageIdInexist,
+
+    #[error("It doesn't have permission to edit venue.")]
+    EditPermissionDenied,
 }

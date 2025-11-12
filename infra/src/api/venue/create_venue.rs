@@ -1,11 +1,14 @@
 use std::ops::Deref;
 
-use actix_web::{post, web, HttpResponse};
+use actix_web::{post, web, HttpRequest, HttpResponse};
 use app::commands::venue_commands::{CreateVenueCommand, VenueImageCommand};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    api::{venue::VenueClock, CustomResponse, CustomResponseError},
+    api::{
+        venue::{get_lessor_and_user_id, VenueClock},
+        CustomResponse, CustomResponseError,
+    },
     web::app_state::AppState,
 };
 
@@ -18,7 +21,6 @@ pub(crate) struct ImageData {
 
 #[derive(Deserialize, Serialize)]
 pub(crate) struct VenueData {
-    pub user_id: i64,
     pub name: String,
     pub address: String,
     pub images: Vec<ImageData>,
@@ -28,9 +30,12 @@ pub(crate) struct VenueData {
 
 #[post("/create_venue")]
 pub async fn create_venue(
+    req: HttpRequest,
     state: web::Data<AppState>,
     data: web::Json<VenueData>,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let (user_id, _) = get_lessor_and_user_id(req)?;
+
     let time = VenueClock;
     let images = data
         .images
@@ -42,7 +47,7 @@ pub async fn create_venue(
         })
         .collect();
     let command = CreateVenueCommand {
-        user_id: data.user_id,
+        user_id,
         name: data.name.clone(),
         address: data.address.clone(),
         images: images,

@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
-use actix_web::{post, web, HttpResponse};
+use actix_web::{post, web, HttpRequest, HttpResponse};
 use app::commands::venue_commands::{
     ImageDeleteCommand, ImageUploadCommand, UpdateVenueCommand,
 };
@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     api::{
-        upload_image, venue::VenueClock, CustomResponse, CustomResponseError,
+        upload_image,
+        venue::{get_lessor_and_user_id, VenueClock},
+        CustomResponse, CustomResponseError,
     },
     web::app_state::AppState,
 };
@@ -17,7 +19,6 @@ use crate::{
 #[derive(Deserialize, Serialize)]
 pub(crate) struct VenueData {
     pub id: i64,
-    pub user_id: i64,
     pub name: Option<String>,
     pub address: Option<String>,
     pub capacity: Option<i32>,
@@ -26,9 +27,11 @@ pub(crate) struct VenueData {
 
 #[post("/update_venue")]
 pub async fn update_venue(
+    req: HttpRequest,
     state: web::Data<AppState>,
     data: web::Json<VenueData>,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let (_user_id, lessor_id) = get_lessor_and_user_id(req)?;
     let time = VenueClock;
     let command = UpdateVenueCommand {
         id: data.id,
@@ -36,6 +39,7 @@ pub async fn update_venue(
         address: data.address.clone(),
         capacity: data.capacity,
         description: data.description.clone(),
+        lessor_id,
     };
     let res = app::use_case::venue::update_venue::update_venue(
         state.venue_service.deref(),
@@ -68,13 +72,16 @@ struct Upload {
 
 #[post("/update_venue_image")]
 pub async fn update_venue_image(
+    req: HttpRequest,
     state: web::Data<AppState>,
     MultipartForm(form): MultipartForm<Upload>,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let (_user_id, lessor_id) = get_lessor_and_user_id(req)?;
     let time = VenueClock;
 
     let image = upload_image(form.file)?;
     let command = ImageUploadCommand {
+        lessor_id,
         venue_id: form.venue_id.0,
         title: form.title.0,
         image,
@@ -109,12 +116,15 @@ struct VenueImageData {
 
 #[post("/delete_venue_image")]
 pub async fn delete_venue_image(
+    req: HttpRequest,
     state: web::Data<AppState>,
     data: web::Json<VenueImageData>,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let (_user_id, lessor_id) = get_lessor_and_user_id(req)?;
     let command = ImageDeleteCommand {
         image_id: data.image_id.clone(),
         venue_id: data.venue_id,
+        lessor_id,
     };
     let res = app::use_case::venue::update_venue::delete_image(
         state.venue_service.deref(),

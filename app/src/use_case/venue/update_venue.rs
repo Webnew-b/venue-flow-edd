@@ -1,3 +1,4 @@
+use domain::domain_error::domain_venue_error::DomainVenueError;
 use domain::util_trait::ImageRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::utils::Clock;
@@ -56,6 +57,14 @@ pub async fn update_venue(
     update: UpdateVenueCommand,
     clock: &impl Clock,
 ) -> AppResult<Outcome<()>> {
+    let lessor = repo.find_lessor_by_venue_id(update.id).await?;
+    if lessor.id().expect("lessor id must be exist.")
+        != update.lessor_id.clone()
+    {
+        return Err(AppError::DomainError(
+            DomainVenueError::EditPermissionDenied.into(),
+        ));
+    }
     let id = update.id;
     let update_struct = get_update_struct(update).await?;
     let venue = repo.find_venue_by_id(id).await?;
@@ -76,6 +85,14 @@ pub async fn upload_image(
     time: &impl Clock,
     images: ImageUploadCommand,
 ) -> AppResult<Outcome<ImageUploadRes>> {
+    let lessor = repo.find_lessor_by_venue_id(images.venue_id).await?;
+    if lessor.id().expect("lessor id must be exist.")
+        != images.lessor_id.clone()
+    {
+        return Err(AppError::DomainError(
+            DomainVenueError::EditPermissionDenied.into(),
+        ));
+    }
     let venue_id = images.venue_id;
     let res = create_image_data(image_repo, time, venue_id, images).await?;
     let images = save_image_data(repo, vec![res]).await?;
@@ -89,6 +106,14 @@ pub async fn delete_image(
     repo: &impl VenueRepository,
     deletion: ImageDeleteCommand,
 ) -> AppResult<Outcome<()>> {
+    let lessor = repo.find_lessor_by_venue_id(deletion.venue_id).await?;
+    if lessor.id().expect("lessor id must be exist.")
+        != deletion.lessor_id.clone()
+    {
+        return Err(AppError::DomainError(
+            DomainVenueError::EditPermissionDenied.into(),
+        ));
+    }
     repo.delete_images(deletion.image_id, deletion.venue_id)
         .await?;
     Ok(Outcome::new((), AppUseCase::DeleteVenueImage))

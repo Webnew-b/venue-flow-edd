@@ -1,8 +1,16 @@
-use actix_web::{middleware::from_fn, web, Scope};
+use actix_web::{
+    body::BoxBody,
+    dev::{ServiceRequest, ServiceResponse},
+    middleware::{from_fn, Next},
+    web, HttpMessage, HttpRequest, HttpResponse, Scope,
+};
 use chrono::Utc;
 use domain_core::utils::Clock;
 
-use crate::api::middleware::encrypt::encrypt_middleware;
+use crate::api::{
+    middleware::encrypt::{encrypt_middleware, UserAuthRequest},
+    CustomResponseError,
+};
 
 pub mod create_venue;
 pub mod get_venue;
@@ -17,6 +25,7 @@ pub fn index() -> Scope {
         .service(
             web::scope("")
                 .wrap(from_fn(encrypt_middleware))
+                .wrap(from_fn(venue_auth))
                 .service(self::get_venue_by_user::get_venue_by_user)
                 .service(self::create_venue::create_venue)
                 .service(self::update_venue::update_venue)
@@ -28,6 +37,45 @@ pub fn index() -> Scope {
         )
         .service(self::get_venue::get_venue)
         .service(self::get_venue_list::get_venue_list)
+}
+
+async fn venue_auth(
+    req: ServiceRequest,
+    next: Next<BoxBody>,
+) -> Result<ServiceResponse<BoxBody>, actix_web::Error> {
+    let ext = req.extensions();
+    let lessor_id = ext
+        .get::<UserAuthRequest>()
+        .ok_or(actix_web::error::ErrorBadRequest("Access denied."))?;
+    if lessor_id.lessor_id.is_none() {
+        let c_res = super::CustomResponse::<()>::new(
+            "Bad request",
+            super::response_code::CodeEnum::BadRequest,
+            None,
+        );
+        let http_res = HttpResponse::BadRequest().json(c_res);
+        let rep = ServiceResponse::new(
+            req.request().clone(),
+            http_res.map_into_boxed_body(),
+        );
+        return Ok(rep);
+    }
+    drop(ext);
+    next.call(req).await
+}
+
+pub(super) fn get_lessor_and_user_id(
+    req: HttpRequest,
+) -> Result<(i64, i64), CustomResponseError> {
+    let extensions = req.extensions();
+    let identity = extensions.get::<UserAuthRequest>().ok_or(
+        CustomResponseError::Unauthorized("Access denied".to_string()),
+    )?;
+    let id = identity
+        .lessor_id
+        .expect("organizer id must be existed")
+        .clone();
+    Ok((identity.user_id.clone(), id))
 }
 
 pub(super) struct VenueClock;
