@@ -12,7 +12,6 @@ use crate::{
     infra_error::{InfraError, InfraResult},
 };
 
-pub mod example;
 pub(crate) mod middleware;
 pub mod rental;
 pub(crate) mod response_code;
