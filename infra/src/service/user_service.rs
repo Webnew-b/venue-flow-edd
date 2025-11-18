@@ -299,7 +299,17 @@ impl UserGenerator for UserService {
 impl UserValidation for UserService {
     async fn valid_email(&self, email: &str) -> Result<(), DomainError> {
         // todo validate the email format and something else.
-        self.exist_email(email).await?;
+        let email = UserEntity::find()
+            .filter(UserCrate::Column::Email.eq(email))
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                InfraError::DatabaseError(DatabaseError::SelectFail)
+            })?;
+        if email.is_none() {
+            return Err(DomainUserError::EmailNotFound.into());
+        };
         Ok(())
     }
     async fn valid_username(&self, username: &str) -> Result<(), DomainError> {
@@ -311,7 +321,9 @@ impl UserValidation for UserService {
                 log::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
-        username.ok_or(DomainUserError::EmailNotFound)?;
+        if username.is_none() {
+            return Err(DomainUserError::UserNameIsNotExist.into());
+        }
         Ok(())
     }
     async fn exist_email(&self, email: &str) -> Result<(), DomainError> {
@@ -323,7 +335,24 @@ impl UserValidation for UserService {
                 log::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
-        email.ok_or(DomainUserError::EmailNotFound)?;
+        if email.is_some() {
+            return Err(DomainUserError::EmailDuplication.into());
+        };
+        Ok(())
+    }
+
+    async fn exist_username(&self, username: &str) -> Result<(), DomainError> {
+        let username = UserEntity::find()
+            .filter(UserCrate::Column::Email.eq(username))
+            .one(self.database.deref())
+            .await
+            .map_err(|e| {
+                log::error!("{}", e);
+                InfraError::DatabaseError(DatabaseError::SelectFail)
+            })?;
+        if username.is_some() {
+            return Err(DomainUserError::UserNameDuplication.into());
+        };
         Ok(())
     }
 }

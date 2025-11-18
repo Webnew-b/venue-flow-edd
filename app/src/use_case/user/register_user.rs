@@ -20,11 +20,11 @@ pub async fn register_user<'image>(
     let builder = UserBuilder::default();
 
     let email = data.email;
-    validator.valid_email(&email).await?;
+    validator.exist_email(&email).await?;
     let builder = builder.email(email);
 
     let username = data.username;
-    validator.valid_username(&username).await?;
+    validator.exist_username(&username).await?;
     let builder = builder.username(username);
 
     let password = password_hasher.hash(&data.password)?;

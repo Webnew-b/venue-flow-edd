@@ -18,7 +18,7 @@ async fn valid_login_type(
     match &login_type {
         UserLoginType::Email(e) => {
             e.validate().map_err(|_| AppUserError::EmailIllegal)?;
-            validator.exist_email(&e.address).await?;
+            validator.valid_email(&e.address).await?;
         },
         UserLoginType::UserName(u) => {
             validator.valid_username(u).await?;

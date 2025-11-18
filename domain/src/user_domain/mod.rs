@@ -11,8 +11,10 @@ pub mod user_dto;
 #[async_trait]
 pub trait UserValidation: Sync + Send {
     async fn valid_email(&self, email: &str) -> Result<(), DomainError>;
-    async fn valid_username(&self, username: &str) -> Result<(), DomainError>;
     async fn exist_email(&self, email: &str) -> Result<(), DomainError>;
+
+    async fn valid_username(&self, username: &str) -> Result<(), DomainError>;
+    async fn exist_username(&self, username: &str) -> Result<(), DomainError>;
 }
 
 #[async_trait]

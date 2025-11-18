@@ -29,13 +29,13 @@ async fn get_update_struct<'image>(
     }
 
     if let Some(u) = update.username {
-        validator.valid_username(u.as_str()).await?;
+        validator.exist_username(u.as_str()).await?;
         update_struct.username = Some(u);
     }
 
     if let Some(e) = update.email {
         //todo verify email and send event
-        validator.valid_email(e.as_str()).await?;
+        validator.exist_email(e.as_str()).await?;
         update_struct.email = Some(e);
     }
 

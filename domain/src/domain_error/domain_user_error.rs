@@ -5,8 +5,14 @@ pub enum DomainUserError {
     #[error("The email has been used.")]
     EmailDuplication,
 
+    #[error("The username has been used.")]
+    UserNameDuplication,
+
     #[error("The user is not found.")]
     UserNotFound,
+
+    #[error("The username is not existed.")]
+    UserNameIsNotExist,
 
     #[error("Failed to contsturct domain user from db user.")]
     InvalidUserContstruction,
