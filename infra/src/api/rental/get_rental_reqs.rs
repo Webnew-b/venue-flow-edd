@@ -28,11 +28,11 @@ pub async fn get_rental_requests(
         CustomResponseError::BadRequest(e.to_string())
     })?;
 
-    let _ = state.event_system.process_outcome(res).await.map_err(|e| {
+    let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);
         CustomResponseError::ServiceError
     })?;
 
-    let res = CustomResponse::<()>::success_by_response(None);
+    let res = CustomResponse::success_by_response(Some(res));
     Ok(res)
 }
