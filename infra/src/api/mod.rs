@@ -23,7 +23,8 @@ pub fn api_route(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api")
             .service(self::user::index())
-            .service(self::rental::index()),
+            .service(self::rental::index())
+            .service(self::venue::index()),
     );
 }
 
