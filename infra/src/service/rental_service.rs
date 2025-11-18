@@ -115,6 +115,7 @@ impl RentalRespository for RentalService {
         let rentals = rentals
             .into_iter()
             .map(|(l, v)| {
+                //todo check v is existed.
                 let venue = v.expect("The venue is not found.");
                 let status = rental_status_to_domain(l.status).to_string();
                 let activity_type =
