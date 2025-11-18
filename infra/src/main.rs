@@ -6,6 +6,5 @@ use tracing::{event, Level};
 async fn main() -> anyhow::Result<()> {
     init_logger()?;
     event!(Level::INFO, "Server is running in :8080");
-    println!("Server is starting");
     start_web_server().await
 }
