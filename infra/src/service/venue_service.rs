@@ -130,8 +130,8 @@ pub(crate) fn db_venue_to_domain(
         .address(venue.address)
         .capacity(venue.capacity)
         .status(status)
-        .createtime(venue.updatetime.and_utc())
-        .createtime(venue.updatetime.and_utc())
+        .createtime(venue.createtime.and_utc())
+        .updatetime(venue.updatetime.and_utc())
         .build()
         .map_err(|e| {
             log::error!("{}", e);
