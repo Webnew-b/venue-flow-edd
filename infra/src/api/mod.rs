@@ -201,8 +201,18 @@ pub(crate) fn upload_image(
 
     let unique_name = Uuid::new_v4().simple().to_string();
 
-    //TODO Configure temprary file path
-    let save_path: PathBuf = ["./temp/", &unique_name, ext].iter().collect();
+    std::fs::create_dir_all("./temp/").map_err(|e| {
+        tracing::error!("{}", e);
+        CustomResponseError::ServiceError
+    })?;
+
+    let save_path: PathBuf =
+        ["./temp/", &unique_name, ".", ext].iter().collect();
+
+    let _ = file.file.persist(save_path.as_path()).map_err(|e| {
+        tracing::error!("{}", e);
+        CustomResponseError::ServiceError
+    })?;
 
     verify_image_type(save_path.as_path()).map_err(|e| {
         tracing::error!("{}", e);
@@ -211,9 +221,5 @@ pub(crate) fn upload_image(
         )
     })?;
 
-    let _ = file.file.persist(save_path.as_path()).map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::ServiceError
-    })?;
     Ok(save_path)
 }
