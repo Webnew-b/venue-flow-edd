@@ -24,16 +24,13 @@ pub(crate) struct UserAuthRequest {
 }
 
 fn option_string2i64(s: Option<String>) -> Result<Option<i64>, Error> {
-    match s {
-        Some(i) => {
-            let res = i.parse::<i64>().map_err(|e| {
-                tracing::error!("{}", e);
-                actix_web::error::ErrorUnauthorized("Token format is illegal.")
-            })?;
-            Ok(Some(res))
-        },
-        None => Ok(None),
-    }
+    s.map(|s| {
+        s.parse::<i64>().map_err(|e| {
+            tracing::error!("{}", e);
+            actix_web::error::ErrorUnauthorized("Token format is illegal.")
+        })
+    })
+    .transpose()
 }
 
 pub async fn encrypt_middleware(
