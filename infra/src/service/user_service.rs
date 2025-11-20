@@ -144,6 +144,7 @@ impl UserService {
         &self,
         token: &str,
     ) -> Result<Claims, InfraError> {
+        let token = token.strip_prefix("Bearer ").unwrap_or(token);
         let validation = Validation::new(Algorithm::HS256);
 
         match decode::<Claims>(
