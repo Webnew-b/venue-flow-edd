@@ -6,10 +6,7 @@ use crate::api::middleware::encrypt::encrypt_middleware;
 
 pub mod get_user_profile;
 pub mod login;
-pub mod logout;
 pub mod register;
-pub mod register_lessor;
-pub mod register_organizer;
 pub mod update_profile;
 
 pub fn index() -> Scope {
