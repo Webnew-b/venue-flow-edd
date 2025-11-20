@@ -44,7 +44,7 @@ pub async fn encrypt_middleware(
         Some(e) => {
             let token = e.to_str().map_err(|e| {
                 tracing::error!("{}", e);
-                actix_web::error::ErrorBadRequest("Access denied.")
+                actix_web::error::ErrorUnauthorized("Token format is illegal.")
             })?;
             let claims = state
                 .user_service
@@ -53,7 +53,7 @@ pub async fn encrypt_middleware(
                 .await
                 .map_err(|e| {
                 tracing::error!("{}", e);
-                actix_web::error::ErrorBadRequest("Access denied.")
+                actix_web::error::ErrorForbidden("Access denied.")
             })?;
             tracing::info!("User id:{} request middleware.", &claims.sub);
             let auth_req = UserAuthRequest {
