@@ -23,6 +23,19 @@ pub(crate) struct UserAuthRequest {
     pub organizer_id: Option<i64>,
 }
 
+fn option_string2i64(s: Option<String>) -> Result<Option<i64>, Error> {
+    match s {
+        Some(i) => {
+            let res = i.parse::<i64>().map_err(|e| {
+                tracing::error!("{}", e);
+                actix_web::error::ErrorUnauthorized("Token format is illegal.")
+            })?;
+            Ok(Some(res))
+        },
+        None => Ok(None),
+    }
+}
+
 pub async fn encrypt_middleware(
     req: ServiceRequest,
     next: Next<BoxBody>,
@@ -57,16 +70,14 @@ pub async fn encrypt_middleware(
             })?;
             tracing::info!("User id:{} request middleware.", &claims.sub);
             let auth_req = UserAuthRequest {
-                user_id: claims
-                    .sub
-                    .parse::<i64>()
-                    .expect("user id is not a number"),
-                lessor_id: claims.lessor_id.map(|x| {
-                    x.parse::<i64>().expect("lessor id is not a number")
-                }),
-                organizer_id: claims.organizer_id.map(|x| {
-                    x.parse::<i64>().expect("organizer id is not a number")
-                }),
+                user_id: claims.sub.parse::<i64>().map_err(|e| {
+                    tracing::error!("{}", e);
+                    actix_web::error::ErrorUnauthorized(
+                        "Token format is illegal.",
+                    )
+                })?,
+                lessor_id: option_string2i64(claims.lessor_id)?,
+                organizer_id: option_string2i64(claims.organizer_id)?,
             };
             req.extensions_mut().insert(auth_req);
         },
