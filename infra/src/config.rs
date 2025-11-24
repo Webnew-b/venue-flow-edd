@@ -70,7 +70,7 @@ pub fn get_web_server_config() -> Result<(String, u16), ConfigError> {
     let port = match port_check {
         Ok(p) => p,
         Err(_) => {
-            log::error!("The port is not a number");
+            tracing::error!("The port is not a number");
             return Err(ConfigError::Illegal(key.to_owned()));
         },
     };
