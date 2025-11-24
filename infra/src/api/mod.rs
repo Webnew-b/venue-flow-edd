@@ -131,7 +131,7 @@ impl ResponseError for CustomResponseError {
             },
             CustomResponseError::Other(s, c) => {
                 let res = CustomResponse::<()>::new(s, c.clone(), None);
-                HttpResponse::Ok().json(res)
+                HttpResponse::InternalServerError().json(res)
             },
         }
     }
