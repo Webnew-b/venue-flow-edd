@@ -344,7 +344,7 @@ impl UserValidation for UserService {
 
     async fn exist_username(&self, username: &str) -> Result<(), DomainError> {
         let username = UserEntity::find()
-            .filter(UserCrate::Column::Email.eq(username))
+            .filter(UserCrate::Column::Username.eq(username))
             .one(self.database.deref())
             .await
             .map_err(|e| {
