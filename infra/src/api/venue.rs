@@ -46,14 +46,14 @@ async fn venue_auth(
     let ext = req.extensions();
     let lessor_id = ext
         .get::<UserAuthRequest>()
-        .ok_or(actix_web::error::ErrorBadRequest("Access denied."))?;
+        .ok_or(actix_web::error::ErrorUnauthorized("Access denied."))?;
     if lessor_id.lessor_id.is_none() {
         let c_res = super::CustomResponse::<()>::new(
-            "Bad request",
-            super::response_code::CodeEnum::BadRequest,
+            "Forbidden",
+            super::response_code::CodeEnum::Forbidden,
             None,
         );
-        let http_res = HttpResponse::BadRequest().json(c_res);
+        let http_res = HttpResponse::Forbidden().json(c_res);
         let rep = ServiceResponse::new(
             req.request().clone(),
             http_res.map_into_boxed_body(),
@@ -73,7 +73,7 @@ pub(super) fn get_lessor_and_user_id(
     )?;
     let id = identity
         .lessor_id
-        .expect("organizer id must be existed")
+        .ok_or(CustomResponseError::Forbidden("Access denied".to_string()))?
         .clone();
     Ok((identity.user_id.clone(), id))
 }
