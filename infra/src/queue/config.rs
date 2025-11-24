@@ -8,12 +8,12 @@ pub(super) fn get_redis_queue_config() -> Result<RedisQueueConfig, InfraError> {
         .add_source(File::with_name("config/redis_queue.toml"))
         .build()
         .map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             QueueError::FailToFetchConfig
         })?
         .try_deserialize()
         .map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             QueueError::FailToDeserializeConfig
         })?;
     Ok(config.queue_config)

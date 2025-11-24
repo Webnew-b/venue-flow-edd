@@ -4,7 +4,6 @@ use std::time::Duration;
 use crate::infra_error::InfraError;
 
 use super::database::config::*;
-use log::info;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use thiserror::Error;
 
@@ -56,7 +55,7 @@ pub async fn start_db_connection() -> Result<Arc<DatabaseConnection>, InfraError
         }
     })?;
 
-    info!("The database connect successed");
+    tracing::info!("The database connect successed");
 
     Ok(Arc::new(db_connection))
 }

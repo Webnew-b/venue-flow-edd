@@ -64,7 +64,7 @@ pub(crate) fn db_rental_to_domain(
         .updatetime(rental.updatetime.and_utc())
         .build()
         .map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             DomainRentalError::InvalidRentalContstruction
         })?;
     Ok(rental)
@@ -87,7 +87,7 @@ impl RentalRespository for RentalService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let res = rental
@@ -109,7 +109,7 @@ impl RentalRespository for RentalService {
             .all(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let rentals = rentals
@@ -148,7 +148,7 @@ impl RentalRespository for RentalService {
     ) -> Result<Rental, DomainError> {
         let res = domain_rental_to_db(rental.clone());
         let res = res.insert(self.database.deref()).await.map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         let rental = rental.update_id(res.id);
@@ -158,7 +158,7 @@ impl RentalRespository for RentalService {
     async fn save_rental(&self, rental: Rental) -> Result<(), DomainError> {
         let rental = domain_rental_to_db(rental);
         rental.save(self.database.deref()).await.map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         Ok(())

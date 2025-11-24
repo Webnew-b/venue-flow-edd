@@ -10,7 +10,7 @@ pub fn get_redis_url() -> Result<String, InfraError> {
 
     let url = format!("redis://{}:{}", addr_res, port_res);
 
-    log::info!("{}", &url);
+    tracing::info!("{}", &url);
 
     Ok(url)
 }

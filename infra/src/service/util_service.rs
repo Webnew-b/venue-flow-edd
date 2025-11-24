@@ -65,14 +65,14 @@ async fn upload_image(
     let file_name: &str = &gen_uuid_image_name(ext);
 
     let mut file_path = PathBuf::from_str(temp_folder).map_err(|e| {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         InfraError::SaveImageFail
     })?;
 
     file_path.push(file_name);
 
     fs::copy(image, file_path.clone()).await.map_err(|e| {
-        log::error!("Could not move the file,cause:{}", e.to_string());
+        tracing::error!("Could not move the file,cause:{}", e.to_string());
         InfraError::SaveImageFail
     })?;
 
@@ -82,7 +82,7 @@ async fn upload_image(
     };
 
     let uri = save_file_to_oss(&client, image_path).await.map_err(|e| {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         InfraError::SaveImageFail
     })?;
 
@@ -131,7 +131,7 @@ impl PasswordHasher for UtilService {
         password: &str,
     ) -> Result<String, domain::domain_error::DomainError> {
         let password = hash(password, DEFAULT_COST).map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             InfraError::HashPasswordFail {
                 password: password.to_string(),
             }
@@ -145,7 +145,7 @@ impl PasswordHasher for UtilService {
         hashed: &str,
     ) -> Result<(), domain::domain_error::DomainError> {
         let res = verify(password, hashed).map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             InfraError::VerifyPasswordFail
         })?;
         if res {

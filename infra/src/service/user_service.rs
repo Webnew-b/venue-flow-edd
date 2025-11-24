@@ -89,7 +89,7 @@ pub(crate) fn db_user_to_domain_user(
         .createtime(user.createtime.and_utc())
         .updatetime(user.updatetime.and_utc());
     let domain_user = domain_user.build().map_err(|e| {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         DomainUserError::InvalidUserContstruction
     })?;
     Ok(domain_user)
@@ -108,7 +108,7 @@ pub(crate) fn db_organizer_to_domain(
         .createtime(organizer.createtime.and_utc())
         .updatetime(organizer.updatetime.and_utc());
     let organizer = organizer.build().map_err(|e| {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         DomainUserError::InvalidOrganizerContstruction
     })?;
     Ok(organizer)
@@ -127,7 +127,7 @@ pub(crate) fn db_lessor_to_domain(
         .createtime(lessor.createtime.and_utc())
         .updatetime(lessor.updatetime.and_utc());
     let lessor = lessor.build().map_err(|e| {
-        log::error!("{}", e);
+        tracing::error!("{}", e);
         DomainUserError::InvalidLessorContstruction
     })?;
     Ok(lessor)
@@ -204,7 +204,7 @@ impl UserService {
                     .one(self.database.deref())
                     .await
                     .map_err(|e| {
-                        log::error!("{}", e);
+                        tracing::error!("{}", e);
                         InfraError::DatabaseError(DatabaseError::SelectFail)
                     })?;
                 let user = user.ok_or(InfraError::DatabaseError(
@@ -229,7 +229,7 @@ impl UserService {
                     .one(self.database.deref())
                     .await
                     .map_err(|e| {
-                        log::error!("{}", e);
+                        tracing::error!("{}", e);
                         InfraError::DatabaseError(DatabaseError::SelectFail)
                     })?;
                 let user = user.ok_or(InfraError::DatabaseError(
@@ -259,7 +259,7 @@ impl UserGenerator for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let organizer_id = OrganizerCrate::Entity::find()
@@ -270,7 +270,7 @@ impl UserGenerator for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let claims = Claims {
@@ -289,7 +289,7 @@ impl UserGenerator for UserService {
             &EncodingKey::from_secret(self.jwt_secret.as_str().as_bytes()),
         )
         .map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             DomainUserError::InvalidTokenGeneration
         })?;
         Ok(UserLoginToken { token })
@@ -305,7 +305,7 @@ impl UserValidation for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         if email.is_none() {
@@ -319,7 +319,7 @@ impl UserValidation for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         if username.is_none() {
@@ -333,7 +333,7 @@ impl UserValidation for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         if email.is_some() {
@@ -348,7 +348,7 @@ impl UserValidation for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         if username.is_some() {
@@ -365,7 +365,11 @@ impl UserRepository for UserService {
             .one(&*self.database)
             .await
             .map_err(|e| {
-                log::error!("find user by {} id is failure cause:{}", id, e);
+                tracing::error!(
+                    "find user by {} id is failure cause:{}",
+                    id,
+                    e
+                );
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let user =
@@ -386,7 +390,7 @@ impl UserRepository for UserService {
             .one(&*self.database)
             .await
             .map_err(|e| {
-            log::error!("find user by login info is failure,casuse:{}", e);
+            tracing::error!("find user by login info is failure,casuse:{}", e);
             InfraError::DatabaseError(DatabaseError::SelectFail)
         })?;
         let user =
@@ -397,7 +401,7 @@ impl UserRepository for UserService {
     async fn save_user(self: &Self, user: User) -> Result<(), DomainError> {
         let user = domain_user_to_db_user(user);
         user.save(self.database.deref()).await.map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             InfraError::DatabaseError(DatabaseError::SaveEntityFail)
         })?;
         Ok(())
@@ -409,7 +413,7 @@ impl UserRepository for UserService {
             .insert(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SaveEntityFail)
             })?;
 
@@ -422,7 +426,7 @@ impl UserRepository for UserService {
             .exec(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::DeleteEntityFail)
             })?;
         Ok(())
@@ -441,7 +445,7 @@ impl UserRepository for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         self.get_user_by_organizer(organizer).await
@@ -456,7 +460,7 @@ impl UserRepository for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         self.get_user_by_lessor(lessor).await
@@ -485,7 +489,7 @@ impl UserRepository for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
@@ -503,7 +507,7 @@ impl UserRepository for UserService {
             .one(self.database.deref())
             .await
             .map_err(|e| {
-                log::error!("{}", e);
+                tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 

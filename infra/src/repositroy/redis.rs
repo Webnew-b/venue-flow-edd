@@ -19,7 +19,7 @@ pub fn create_redis_connection() -> Result<Pool, InfraError> {
     let pool = cfg
         .create_pool(Some(deadpool_redis::Runtime::Tokio1))
         .map_err(|e| {
-            log::error!("{}", e);
+            tracing::error!("{}", e);
             RedisError::FailToCreateRedis
         })?;
 
