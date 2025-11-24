@@ -5,6 +5,6 @@ use tracing::{event, Level};
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     init_logger()?;
-    event!(Level::INFO, "Server is running in :8080");
+    event!(Level::INFO, "Server is running");
     start_web_server().await
 }
