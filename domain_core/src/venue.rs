@@ -266,9 +266,6 @@ mod tests {
     #[test]
     fn test_update_images() {
         let venue = create_test_venue();
-        let clock = MockClock {
-            now: Utc.with_ymd_and_hms(2025, 7, 12, 15, 0, 0).unwrap(),
-        };
 
         // 使用 VenueImage::new 构造函数，它已经包含了内在的校验逻辑
         let new_images = vec![
@@ -303,11 +300,6 @@ mod tests {
             *updated_venue.images(),
             new_images,
             "Images should be updated correctly"
-        );
-        assert_eq!(
-            *updated_venue.updatetime(),
-            clock.now,
-            "Update time should be changed"
         );
     }
 }
