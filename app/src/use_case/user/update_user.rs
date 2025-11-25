@@ -14,6 +14,8 @@ async fn get_update_struct<'image>(
     validator: &impl UserValidation,
     image_repo: &impl ImageRepository,
     password_hasher: &impl PasswordHasher,
+    email: &str,
+    username: &str,
 ) -> AppResult<UserUpdate> {
     let mut update_struct = UserUpdate::new();
 
@@ -29,14 +31,18 @@ async fn get_update_struct<'image>(
     }
 
     if let Some(u) = update.username {
-        validator.exist_username(u.as_str()).await?;
-        update_struct.username = Some(u);
+        if u != username {
+            validator.exist_username(u.as_str()).await?;
+            update_struct.username = Some(u);
+        }
     }
 
     if let Some(e) = update.email {
-        //todo verify email and send event
-        validator.exist_email(e.as_str()).await?;
-        update_struct.email = Some(e);
+        if e != email {
+            //todo verify email and send event
+            validator.exist_email(e.as_str()).await?;
+            update_struct.email = Some(e);
+        }
     }
 
     if let Some(p) = update.password {
@@ -64,10 +70,18 @@ pub async fn update_user<'image>(
     clock: &impl Clock,
 ) -> AppResult<Outcome<()>> {
     let id = update.id;
-    let update_struct =
-        get_update_struct(update, validator, image_repo, password_hasher)
-            .await?;
     let user = repo.find_user_by_id(id).await?;
+    let username = user.username();
+    let user_email = user.email();
+    let update_struct = get_update_struct(
+        update,
+        validator,
+        image_repo,
+        password_hasher,
+        user_email,
+        username,
+    )
+    .await?;
     let user = user.update_user(update_struct, clock).map_err(|e| {
         AppError::UpdateEntityFailed {
             entity_type: "user".to_string(),
