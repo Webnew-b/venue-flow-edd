@@ -23,7 +23,6 @@ pub fn index() -> Scope {
                 .wrap(from_fn(rental_organizer_auth))
                 .service(self::create_rental_req::create_rental_req)
                 .service(self::cannel_rental_req::cancel_rental_request)
-                .service(self::get_rental_reqs::get_rental_requests)
                 .service(self::update_rental_time::update_rental_time),
         )
         .service(
@@ -31,6 +30,7 @@ pub fn index() -> Scope {
                 .wrap(from_fn(super::middleware::encrypt::encrypt_middleware))
                 .wrap(from_fn(rental_lessor_auth))
                 .service(self::process_rental_req::approve_rental_request)
+                .service(self::get_rental_reqs::get_rental_requests)
                 .service(self::process_rental_req::reject_rental_request),
         )
 }

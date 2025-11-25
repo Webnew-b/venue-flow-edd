@@ -1,26 +1,21 @@
 use std::ops::Deref;
 
-use actix_web::{post, web, HttpResponse};
-use serde::{Deserialize, Serialize};
+use actix_web::{post, web, HttpRequest, HttpResponse};
 
 use crate::{
-    api::{CustomResponse, CustomResponseError},
+    api::{rental::get_lessor_id, CustomResponse, CustomResponseError},
     web::app_state::AppState,
 };
-
-#[derive(Deserialize, Serialize)]
-struct GetRentalData {
-    pub lessor_id: i64,
-}
 
 #[post("/get_rental_requests")]
 pub async fn get_rental_requests(
     state: web::Data<AppState>,
-    data: web::Json<GetRentalData>,
+    req: HttpRequest,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let lessor_id = get_lessor_id(req)?;
     let res = app::use_case::rental::get_rental_requests::get_rental_requests(
         state.rental_service.deref(),
-        data.lessor_id,
+        lessor_id,
     )
     .await
     .map_err(|e| {

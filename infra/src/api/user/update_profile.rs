@@ -1,17 +1,20 @@
 use std::ops::Deref;
 
 use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
-use actix_web::{post, web, HttpResponse};
+use actix_web::{post, web, HttpRequest, HttpResponse};
 use app::commands::user_commands::UpdateUserCommand;
 
 use crate::{
-    api::{upload_image, user::UserClock, CustomResponse, CustomResponseError},
+    api::{
+        upload_image,
+        user::{get_user_id, UserClock},
+        CustomResponse, CustomResponseError,
+    },
     web::app_state::AppState,
 };
 
 #[derive(Debug, MultipartForm)]
 struct Updation {
-    pub id: Text<i64>,
     pub username: Text<Option<String>>,
     pub password: Text<Option<String>>,
     pub email: Text<Option<String>>,
@@ -25,14 +28,16 @@ struct Updation {
 pub async fn update_user(
     MultipartForm(form): MultipartForm<Updation>,
     state: web::Data<AppState>,
+    request: HttpRequest,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let id = get_user_id(request)?;
     let temp_path = state.util_service.deref().get_temp_folder();
     let save_path = match form.avatar {
         Some(e) => Some(upload_image(temp_path, e)?),
         None => None,
     };
     let update = UpdateUserCommand {
-        id: form.id.0,
+        id,
         username: form.username.0,
         email: form.email.0,
         password: form.password.0,
