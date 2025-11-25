@@ -21,8 +21,9 @@ pub async fn upload_venue_image(
     MultipartForm(form): MultipartForm<Upload>,
 ) -> Result<HttpResponse, CustomResponseError> {
     let mut save_path = vec![];
+    let temp_path = state.util_service.deref().get_temp_folder();
     for i in form.file {
-        let path = upload_image(i)?;
+        let path = upload_image(temp_path, i)?;
         save_path.push(path);
     }
     let res = state

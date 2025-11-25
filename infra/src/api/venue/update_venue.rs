@@ -79,7 +79,8 @@ pub async fn update_venue_image(
     let (_user_id, lessor_id) = get_lessor_and_user_id(req)?;
     let time = VenueClock;
 
-    let image = upload_image(form.file)?;
+    let temp_path = state.util_service.deref().get_temp_folder();
+    let image = upload_image(temp_path, form.file)?;
     let command = ImageUploadCommand {
         lessor_id,
         venue_id: form.venue_id.0,

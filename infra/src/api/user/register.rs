@@ -24,7 +24,8 @@ pub async fn register(
     state: web::Data<AppState>,
     MultipartForm(form): MultipartForm<Upload>,
 ) -> Result<HttpResponse, CustomResponseError> {
-    let save_path = upload_image(form.file)?;
+    let temp_path = state.util_service.deref().get_temp_folder();
+    let save_path = upload_image(temp_path, form.file)?;
 
     let register_data = app::commands::user_commands::RegisterUserCommand {
         username: form.username.0,

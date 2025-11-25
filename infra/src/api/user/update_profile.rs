@@ -26,8 +26,9 @@ pub async fn update_user(
     MultipartForm(form): MultipartForm<Updation>,
     state: web::Data<AppState>,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let temp_path = state.util_service.deref().get_temp_folder();
     let save_path = match form.avatar {
-        Some(e) => Some(upload_image(e)?),
+        Some(e) => Some(upload_image(temp_path, e)?),
         None => None,
     };
     let update = UpdateUserCommand {

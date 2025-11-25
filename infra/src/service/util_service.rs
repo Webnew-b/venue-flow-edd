@@ -34,6 +34,9 @@ impl UtilService {
             oss_temp_file_path: config.temp_folder,
         }
     }
+    pub fn get_temp_folder<'path>(&'path self) -> &'path str {
+        &self.oss_temp_file_path
+    }
 }
 
 fn get_file_name(path: &Path) -> Result<String, DomainError> {
