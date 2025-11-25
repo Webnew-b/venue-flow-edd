@@ -52,7 +52,12 @@ pub async fn get_venue_by_user(
     user_id: i64,
 ) -> AppResult<Outcome<Vec<GetVenueRes>>> {
     let lessor = user_repo.find_lessor_by_user_id(user_id).await?;
-    let venue = venue_repo.find_venue_by_lessor_id(user_id, page).await?;
+    let venue = venue_repo
+        .find_venue_by_lessor_id(
+            lessor.id().expect("lessor id must be existed."),
+            page,
+        )
+        .await?;
 
     let res = venue
         .iter()
