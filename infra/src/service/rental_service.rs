@@ -55,6 +55,7 @@ pub(crate) fn db_rental_to_domain(
     let activity = rental_activity_type_to_domain(rental.activity_type);
     let rental = builder
         .id(Some(rental.id))
+        .organizer_id(rental.organizer_id)
         .venue_id(rental.venue_id)
         .start_time(rental.start_time.and_utc())
         .end_time(rental.end_time.and_utc())
