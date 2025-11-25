@@ -187,6 +187,7 @@ fn verify_image_type(path: &Path) -> InfraResult<()> {
 }
 
 pub(crate) fn upload_image(
+    path: &str,
     file: TempFile,
 ) -> Result<PathBuf, CustomResponseError> {
     let original_name = &file.file_name.as_deref().unwrap_or("unknown");
@@ -200,13 +201,12 @@ pub(crate) fn upload_image(
 
     let unique_name = Uuid::new_v4().simple().to_string();
 
-    std::fs::create_dir_all("./temp/").map_err(|e| {
+    std::fs::create_dir_all(path).map_err(|e| {
         tracing::error!("{}", e);
         CustomResponseError::ServiceError
     })?;
 
-    let save_path: PathBuf =
-        ["./temp/", &unique_name, ".", ext].iter().collect();
+    let save_path: PathBuf = [path, &unique_name, ".", ext].iter().collect();
 
     let _ = file.file.persist(save_path.as_path()).map_err(|e| {
         tracing::error!("{}", e);
