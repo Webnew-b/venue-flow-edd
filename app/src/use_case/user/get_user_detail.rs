@@ -11,7 +11,7 @@ pub async fn get_user_detail(
     let user = repo.find_user_by_id(id).await?;
     let id = user.id().ok_or(AppError::IdInexisted("user".to_string()))?;
     let is_organizer = repo.find_user_has_organizer_role(id).await?.is_some();
-    let is_lessor = repo.find_user_has_organizer_role(id).await?.is_some();
+    let is_lessor = repo.find_user_has_lessor_role(id).await?.is_some();
 
     let res = UserDetail {
         id,
