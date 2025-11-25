@@ -1,17 +1,16 @@
 use std::ops::Deref;
 
-use actix_web::{post, web, HttpResponse};
+use actix_web::{post, web, HttpRequest, HttpResponse};
 use domain::PageLimit;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    api::{CustomResponse, CustomResponseError},
+    api::{user::get_user_id, CustomResponse, CustomResponseError},
     web::app_state::AppState,
 };
 
 #[derive(Deserialize, Serialize)]
 struct GetVenueData {
-    pub user_id: i64,
     pub page: u64,
     pub limit: u64,
 }
@@ -20,7 +19,9 @@ struct GetVenueData {
 pub async fn get_venue_by_user(
     state: web::Data<AppState>,
     data: web::Json<GetVenueData>,
+    req: HttpRequest,
 ) -> Result<HttpResponse, CustomResponseError> {
+    let user_id = get_user_id(req)?;
     let page = PageLimit {
         page: data.page,
         limit: data.limit,
@@ -29,7 +30,7 @@ pub async fn get_venue_by_user(
         state.venue_service.deref(),
         state.user_service.deref(),
         page,
-        data.user_id,
+        user_id,
     )
     .await
     .map_err(|e| {
