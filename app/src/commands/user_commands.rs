@@ -57,7 +57,6 @@ pub struct RegisteredUserDto {
     pub email: String,
     pub avatar: String,
     pub gender: String,
-    pub password: String,
 }
 
 pub struct UpdateUserCommand<'image_path> {

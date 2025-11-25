@@ -61,7 +61,6 @@ pub async fn register_user<'image>(
         username: user.username().to_string(),
         avatar: user.avatar().to_string(),
         gender: user.gender().to_string(),
-        password: user.password().to_string(),
     };
 
     Ok(Outcome::new(res, AppUseCase::UserRegistrantion))
