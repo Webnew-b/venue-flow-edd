@@ -131,18 +131,24 @@ async fn create_s3_client(config: &OssConfig) -> Result<Client, OssError> {
         "static",
     );
 
-    let mut aws_config = aws_config::defaults(BehaviorVersion::latest())
+    let aws_config = aws_config::defaults(BehaviorVersion::latest())
         .credentials_provider(credentials)
+        .region(Region::new(region.to_string()))
+        .load()
+        .await;
+
+    let mut config_build = aws_sdk_s3::config::Builder::from(&aws_config)
+        .force_path_style(true)
         .region(Region::new(region.to_string()));
 
     if !config.url.contains("amazonaws.com") {
         let endpoint_url = config.url.trim_end_matches('/');
-        aws_config = aws_config.endpoint_url(endpoint_url);
+        config_build = config_build.endpoint_url(endpoint_url);
         info!("Using custom S3 endpoint: {}", endpoint_url);
     }
 
-    let aws_config = aws_config.load().await;
-    let client = Client::new(&aws_config);
+    let config = config_build.build();
+    let client = Client::from_conf(config);
 
     info!("S3 client created successfully");
     Ok(client)
