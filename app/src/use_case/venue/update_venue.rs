@@ -70,7 +70,7 @@ pub async fn update_venue(
     let venue = repo.find_venue_by_id(id).await?;
     let venue = venue.update_venue(update_struct, clock).map_err(|e| {
         AppError::UpdateEntityFailed {
-            entity_type: "user".to_string(),
+            entity_type: "venue".to_string(),
             message: e.to_string(),
             source: e,
         }
