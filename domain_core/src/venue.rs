@@ -166,6 +166,7 @@ mod tests {
     fn create_test_venue() -> Venue {
         let now = Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap();
         VenueBuilder::default()
+            .id(Some(1))
             .lessor_id(1)
             .name("Initial Venue Name".to_string())
             .address("123 Main St".to_string())
