@@ -23,7 +23,6 @@ impl fmt::Display for ConfigError {
 impl std::error::Error for ConfigError {}
 
 pub fn get_env_value_from_key(key: &str) -> Result<String, ConfigError> {
-    dotenv::dotenv().ok();
     std::env::var(key).map_err(|e| match e {
         env::VarError::NotPresent => ConfigError::NotFound(key.to_string()),
         env::VarError::NotUnicode(_) => ConfigError::Illegal(key.to_string()),

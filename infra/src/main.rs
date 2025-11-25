@@ -4,6 +4,7 @@ use tracing::{event, Level};
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
+    dotenv::dotenv().ok();
     init_logger()?;
     event!(Level::INFO, "Server is running");
     start_web_server().await
