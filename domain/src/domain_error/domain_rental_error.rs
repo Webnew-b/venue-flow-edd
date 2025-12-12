@@ -10,4 +10,7 @@ pub enum DomainRentalError {
 
     #[error("Failed to contsturct domain rental from db rental.")]
     InvalidRentalContstruction,
+
+    #[error("The venue is not owned lessor.")]
+    VenueNotOwnedLessor,
 }

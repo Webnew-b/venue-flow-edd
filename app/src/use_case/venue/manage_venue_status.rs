@@ -14,9 +14,7 @@ pub async fn publish_venue(
 ) -> AppResult<Outcome<ManageVenueRes>> {
     let lessor = repo.find_lessor_by_venue_id(id).await?;
     if lessor.id().expect("lessor id must be exist.") != lessor_id {
-        return Err(crate::app_error::AppError::DomainError(
-            DomainVenueError::EditPermissionDenied.into(),
-        ));
+        return Err(DomainVenueError::EditPermissionDenied.into());
     }
     let venue = repo.find_venue_by_id(id).await?;
     let venue = venue.list_venue(time);
@@ -36,9 +34,7 @@ pub async fn unpublish_venue(
 ) -> AppResult<Outcome<ManageVenueRes>> {
     let lessor = repo.find_lessor_by_venue_id(id).await?;
     if lessor.id().expect("lessor id must be exist.") != lessor_id {
-        return Err(crate::app_error::AppError::DomainError(
-            DomainVenueError::EditPermissionDenied.into(),
-        ));
+        return Err(DomainVenueError::EditPermissionDenied.into());
     }
     let venue = repo.find_venue_by_id(id).await?;
     let venue = venue.unlist_venue(time);

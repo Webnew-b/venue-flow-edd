@@ -1,6 +1,7 @@
+use domain::domain_error::DomainError;
 use domain::user_domain::UserRepository;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::user_commands::OrganizerDetail;
 use crate::{AppUseCase, Outcome};
 
@@ -12,7 +13,7 @@ pub async fn get_user_detail(
     let id = user
         .user()
         .id()
-        .ok_or(AppError::IdInexisted("user".to_string()))?;
+        .ok_or(DomainError::IdInexisted("user".to_string()))?;
 
     let res = OrganizerDetail {
         id,

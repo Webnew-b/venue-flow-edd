@@ -4,7 +4,7 @@ use domain::user_domain::UserRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::venue::VenueStatus;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::venue_commands::VenueImageRes;
 use crate::querys::venue_querys::GetVenueRes;
 use crate::{AppUseCase, Outcome};
@@ -19,14 +19,14 @@ pub async fn get_venue(
     let lessor = user_repo.find_lessor_by_id(lessor_id.clone()).await?;
 
     if veune.status() != &VenueStatus::Published {
-        return Err(AppError::DomainError(DomainError::DomainVenueError(
+        return Err(DomainError::DomainVenueError(
             DomainVenueError::VenueIsUnpublished,
-        )));
+        ));
     }
 
     let id = veune
         .id()
-        .ok_or(AppError::IdInexisted("veune".to_string()))?;
+        .ok_or(DomainError::IdInexisted("veune".to_string()))?;
 
     let images: Vec<VenueImageRes> = veune
         .images()

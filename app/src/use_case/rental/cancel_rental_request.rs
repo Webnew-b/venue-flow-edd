@@ -1,9 +1,10 @@
+use domain::domain_error::DomainError;
 use domain::rental_domain::RentalRespository;
 use domain::user_domain::UserRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::utils::Clock;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::app_event::{AppEvent, AppEventList};
 use crate::{AppUseCase, Outcome};
 
@@ -24,7 +25,7 @@ pub async fn cancel_rental_request(
     let organizer = user_repo.find_organizer_by_id(organizer_id).await?;
 
     let rental = rental.cancel_rental(organizer_id, time).map_err(|e| {
-        AppError::EntityInvalid {
+        DomainError::EntityInvalid {
             entity_type: "rental".to_string(),
             cause: e.to_string(),
         }
@@ -36,10 +37,10 @@ pub async fn cancel_rental_request(
 
     let organizer_id = organizer
         .id()
-        .ok_or(AppError::IdInexisted("organizer".to_string()))?;
+        .ok_or(DomainError::IdInexisted("organizer".to_string()))?;
     let lessor_id = lessor
         .id()
-        .ok_or(AppError::IdInexisted("organizer".to_string()))?;
+        .ok_or(DomainError::IdInexisted("organizer".to_string()))?;
 
     events.push(AppEvent::CanceledRentalRequest {
         organizer_email: organizer.user().email().to_string(),

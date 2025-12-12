@@ -1,9 +1,10 @@
+use domain::domain_error::DomainError;
 use domain::rental_domain::RentalRespository;
 use domain_core::rental::RentalBuilder;
 use domain_core::utils::Clock;
 use garde::Validate;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::rental_commands::{CreateRentalCommand, CreateRentalRes};
 use crate::{AppUseCase, Outcome};
 
@@ -24,13 +25,16 @@ pub async fn create_rental_request(
         .updatetime(time.now())
         .createtime(time.now());
 
-    let rental = builder.build().map_err(|e| AppError::CreateEntityFailed {
-        entity_type: "vental".to_string(),
-        message: e.to_string(),
-        source: e,
-    })?;
+    let rental =
+        builder
+            .build()
+            .map_err(|e| DomainError::CreateEntityFailed {
+                entity_type: "vental".to_string(),
+                message: e.to_string(),
+                source: e,
+            })?;
 
-    rental.validate().map_err(|e| AppError::EntityInvalid {
+    rental.validate().map_err(|e| DomainError::EntityInvalid {
         entity_type: "user".to_string(),
         cause: e.to_string(),
     })?;
@@ -39,7 +43,7 @@ pub async fn create_rental_request(
 
     let id = rental
         .id()
-        .ok_or(AppError::IdInexisted("user".to_string()))?;
+        .ok_or(DomainError::IdInexisted("user".to_string()))?;
 
     let res = CreateRentalRes {
         id,

@@ -1,6 +1,7 @@
+use domain::domain_error::DomainError;
 use domain::user_domain::UserRepository;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::user_commands::LessorDetail;
 use crate::{AppUseCase, Outcome};
 
@@ -12,7 +13,7 @@ pub async fn get_lessor_detail(
     let id = user
         .user()
         .id()
-        .ok_or(AppError::IdInexisted("user".to_string()))?;
+        .ok_or(DomainError::DataIsNotFound("User".to_string()))?;
     //todo return venues from lessor
     let venues = vec!["aaa".to_string()];
 

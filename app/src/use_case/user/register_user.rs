@@ -1,11 +1,12 @@
+use domain::domain_error::domain_user_error::DomainUserError;
+use domain::domain_error::DomainError;
 use domain::user_domain::{UserRepository, UserValidation};
 use domain::util_trait::{ImageRepository, PasswordHasher};
 use domain_core::user::{UserBuilder, UserGender};
 use domain_core::utils::Clock;
 use garde::Validate;
 
-use crate::app_error::user_error::AppUserError;
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::user_commands::{RegisterUserCommand, RegisteredUserDto};
 use crate::{AppUseCase, Outcome};
 
@@ -31,7 +32,7 @@ pub async fn register_user<'image>(
     let builder = builder.password(password).introduce(data.introduce);
 
     let gender = UserGender::get_gender(data.gender.as_str())
-        .ok_or(AppUserError::InvalidGender)?;
+        .ok_or(DomainUserError::InvalidGender)?;
     let builder = builder.gender(gender);
 
     let avatar = image_repo.upload_image(data.avatar).await?;
@@ -40,20 +41,22 @@ pub async fn register_user<'image>(
         .updatetime(time.now())
         .createtime(time.now())
         .build()
-        .map_err(|e| AppError::CreateEntityFailed {
+        .map_err(|e| DomainError::CreateEntityFailed {
             entity_type: "user".to_string(),
             message: e.to_string(),
             source: e,
         })?;
 
-    user.validate().map_err(|e| AppError::EntityInvalid {
+    user.validate().map_err(|e| DomainError::EntityInvalid {
         entity_type: "user".to_string(),
         cause: e.to_string(),
     })?;
 
     let user = repo.create_user(user).await?;
 
-    let id = user.id().ok_or(AppError::IdInexisted("user".to_string()))?;
+    let id = user
+        .id()
+        .ok_or(DomainError::IdInexisted("user".to_string()))?;
 
     let res = RegisteredUserDto {
         id,

@@ -1,10 +1,11 @@
+use domain::domain_error::domain_rental_error::DomainRentalError;
+use domain::domain_error::DomainError;
 use domain::rental_domain::RentalRespository;
 use domain::user_domain::UserRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::utils::Clock;
 
-use crate::app_error::rental_error::AppRentalError;
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::app_event::{AppEvent, AppEventList};
 use crate::{AppUseCase, Outcome};
 
@@ -26,21 +27,20 @@ pub async fn approve_rental_request(
         .is_venue_owned_by_lessor(lessor_id, rental.venue_id().clone())
         .await?
         .then_some(())
-        .ok_or(AppRentalError::VenueNotOwnedLessor)?;
+        .ok_or(DomainRentalError::VenueNotOwnedLessor)?;
 
-    let rental =
-        rental
-            .accepet_rental(time)
-            .map_err(|e| AppError::EntityInvalid {
-                entity_type: "rental".to_string(),
-                cause: e.to_string(),
-            })?;
+    let rental = rental.accepet_rental(time).map_err(|e| {
+        DomainError::EntityInvalid {
+            entity_type: "rental".to_string(),
+            cause: e.to_string(),
+        }
+    })?;
 
     repo.save_rental(rental).await?;
 
     let organizer_id = organizer
         .id()
-        .ok_or(AppError::IdInexisted("organizer".to_string()))?;
+        .ok_or(DomainError::IdInexisted("organizer".to_string()))?;
 
     let mut events = AppEventList::new();
 
@@ -74,12 +74,12 @@ pub async fn reject_rental_request(
         .is_venue_owned_by_lessor(lessor_id, rental.venue_id().clone())
         .await?
         .then_some(())
-        .ok_or(AppRentalError::VenueNotOwnedLessor)?;
+        .ok_or(DomainRentalError::VenueNotOwnedLessor)?;
 
     let rental =
         rental
             .reject_rental(time)
-            .map_err(|e| AppError::EntityInvalid {
+            .map_err(|e| DomainError::EntityInvalid {
                 entity_type: "rental".to_string(),
                 cause: e.to_string(),
             })?;
@@ -88,7 +88,7 @@ pub async fn reject_rental_request(
 
     let organizer_id = organizer
         .id()
-        .ok_or(AppError::IdInexisted("organizer".to_string()))?;
+        .ok_or(DomainError::IdInexisted("organizer".to_string()))?;
 
     let mut events = AppEventList::new();
 

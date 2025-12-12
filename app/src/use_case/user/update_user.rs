@@ -1,11 +1,12 @@
+use domain::domain_error::domain_user_error::DomainUserError;
+use domain::domain_error::DomainError;
 use domain::user_domain::{UserRepository, UserValidation};
 use domain::util_trait::{ImageRepository, PasswordHasher};
 use domain_core::user::user_update::UserUpdate;
 use domain_core::user::UserGender;
 use domain_core::utils::Clock;
 
-use crate::app_error::user_error::AppUserError;
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::user_commands::UpdateUserCommand;
 use crate::{AppUseCase, Outcome};
 
@@ -21,7 +22,7 @@ async fn get_update_struct<'image>(
 
     if let Some(g) = update.gender {
         let gender = UserGender::get_gender(g.as_str())
-            .ok_or(AppUserError::InvalidGender)?;
+            .ok_or(DomainUserError::InvalidGender)?;
         update_struct.gender = Some(gender);
     };
 
@@ -51,13 +52,13 @@ async fn get_update_struct<'image>(
     }
     update_struct.introduce = update.introduce;
 
-    update_struct
-        .valid_update()
-        .map_err(|e| AppError::UpdateEntityFailed {
+    update_struct.valid_update().map_err(|e| {
+        DomainError::UpdateEntityFailed {
             entity_type: "user".to_string(),
             message: e.to_string(),
             source: e,
-        })?;
+        }
+    })?;
     Ok(update_struct)
 }
 
@@ -83,7 +84,7 @@ pub async fn update_user<'image>(
     )
     .await?;
     let user = user.update_user(update_struct, clock).map_err(|e| {
-        AppError::UpdateEntityFailed {
+        DomainError::UpdateEntityFailed {
             entity_type: "user".to_string(),
             message: e.to_string(),
             source: e,

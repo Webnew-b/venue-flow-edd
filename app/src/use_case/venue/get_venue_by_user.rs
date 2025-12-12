@@ -5,7 +5,7 @@ use domain::PageLimit;
 use domain_core::user::lessor::Lessor;
 use domain_core::venue::Venue;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::venue_commands::VenueImageRes;
 use crate::querys::venue_querys::GetVenueRes;
 use crate::{AppUseCase, Outcome};
@@ -16,10 +16,10 @@ pub fn tranform_venue(
 ) -> AppResult<GetVenueRes> {
     let id = venue
         .id()
-        .ok_or(AppError::IdInexisted("venue".to_string()))?;
+        .ok_or(DomainError::IdInexisted("venue".to_string()))?;
     let lessor_id = lessor
         .id()
-        .ok_or(AppError::IdInexisted("lessor".to_string()))?;
+        .ok_or(DomainError::IdInexisted("lessor".to_string()))?;
 
     let images: Vec<VenueImageRes> =
         venue.images().to_vec().clone().into_iter().try_fold(

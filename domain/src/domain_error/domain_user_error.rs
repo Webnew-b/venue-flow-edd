@@ -37,4 +37,10 @@ pub enum DomainUserError {
 
     #[error("Password is incorrect.")]
     PasswordIncorrect,
+
+    #[error("Email format is illegal.")]
+    EmailIsIllegal,
+
+    #[error("Gender format is invalid.")]
+    InvalidGender,
 }

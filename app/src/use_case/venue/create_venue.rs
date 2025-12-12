@@ -6,7 +6,7 @@ use domain_core::venue::venue_image::VenueImage;
 use domain_core::venue::VenueBuilder;
 use garde::Validate;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::venue_commands::{
     CreateVenueCommand, CreateVenueRes, VenueImageRes,
 };
@@ -39,7 +39,7 @@ pub async fn create_venue(
 
     let lessor_id = lessor
         .id()
-        .ok_or(AppError::IdInexisted("venue".to_string()))?;
+        .ok_or(DomainError::IdInexisted("venue".to_string()))?;
 
     let bulider = VenueBuilder::default()
         .images(vec![])
@@ -51,13 +51,13 @@ pub async fn create_venue(
         .updatetime(time.now())
         .createtime(time.now())
         .build()
-        .map_err(|e| AppError::CreateEntityFailed {
+        .map_err(|e| DomainError::CreateEntityFailed {
             entity_type: "venue".to_string(),
             message: e.to_string(),
             source: e,
         })?;
 
-    bulider.validate().map_err(|e| AppError::EntityInvalid {
+    bulider.validate().map_err(|e| DomainError::EntityInvalid {
         entity_type: "venue".to_string(),
         cause: e.to_string(),
     })?;
@@ -66,7 +66,7 @@ pub async fn create_venue(
 
     let id = venue_res
         .id()
-        .ok_or(AppError::IdInexisted("venue".to_string()))?;
+        .ok_or(DomainError::IdInexisted("venue".to_string()))?;
 
     let images = if venue_create.images.is_empty() {
         vec![]

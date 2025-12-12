@@ -4,8 +4,7 @@ use domain::user_domain::{UserGenerator, UserRepository, UserValidation};
 use domain::util_trait::PasswordHasher;
 use garde::Validate;
 
-use crate::app_error::user_error::AppUserError;
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::user_commands::{
     LoginUserCommand, LoginedRes, UserLoginType,
 };
@@ -17,7 +16,9 @@ async fn valid_login_type(
 ) -> AppResult<()> {
     match &login_type {
         UserLoginType::Email(e) => {
-            e.validate().map_err(|_| AppUserError::EmailIllegal)?;
+            e.validate().map_err(|_| {
+                DomainError::DomainUserError(DomainUserError::EmailIsIllegal)
+            })?;
             validator.valid_email(&e.address).await?;
         },
         UserLoginType::UserName(u) => {
@@ -39,21 +40,15 @@ pub async fn login_user(
 
     valid_login_type(validator, &login_type).await?;
 
-    let user = repo.find_user_by_name(info.into()).await.map_err(|e| {
-        let error: AppError = match e {
-            DomainError::DomainUserError(DomainUserError::UserNotFound) => {
-                AppUserError::LoginIncrrect("email".to_string()).into()
-            },
-            other => other.into(),
-        };
-        error
-    })?;
+    let user = repo.find_user_by_name(info.into()).await?;
 
     password_hash.verify(password.as_str(), user.password())?;
 
     let token = generator.generate_token(&user).await?.token;
 
-    let id = user.id().ok_or(AppError::IdInexisted("user".to_string()))?;
+    let id = user
+        .id()
+        .ok_or(DomainError::IdInexisted("user".to_string()))?;
     let res = LoginedRes {
         id,
         username: user.username().to_string(),

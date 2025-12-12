@@ -1,11 +1,12 @@
 use domain::domain_error::domain_venue_error::DomainVenueError;
+use domain::domain_error::DomainError;
 use domain::util_trait::ImageRepository;
 use domain::venue_domain::VenueRepository;
 use domain_core::utils::Clock;
 use domain_core::venue::venue_image::VenueImage;
 use domain_core::venue::venue_update::VenueUpdate;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::commands::venue_commands::{
     ImageDeleteCommand, ImageUploadCommand, ImageUploadRes, UpdateVenueCommand,
 };
@@ -61,15 +62,13 @@ pub async fn update_venue(
     if lessor.id().expect("lessor id must be exist.")
         != update.lessor_id.clone()
     {
-        return Err(AppError::DomainError(
-            DomainVenueError::EditPermissionDenied.into(),
-        ));
+        return Err(DomainVenueError::EditPermissionDenied.into());
     }
     let id = update.id;
     let update_struct = get_update_struct(update).await?;
     let venue = repo.find_venue_by_id(id).await?;
     let venue = venue.update_venue(update_struct, clock).map_err(|e| {
-        AppError::UpdateEntityFailed {
+        DomainError::UpdateEntityFailed {
             entity_type: "venue".to_string(),
             message: e.to_string(),
             source: e,
@@ -89,9 +88,7 @@ pub async fn upload_image(
     if lessor.id().expect("lessor id must be exist.")
         != images.lessor_id.clone()
     {
-        return Err(AppError::DomainError(
-            DomainVenueError::EditPermissionDenied.into(),
-        ));
+        return Err(DomainVenueError::EditPermissionDenied.into());
     }
     let venue_id = images.venue_id;
     let res = create_image_data(image_repo, time, venue_id, images).await?;
@@ -110,9 +107,7 @@ pub async fn delete_image(
     if lessor.id().expect("lessor id must be exist.")
         != deletion.lessor_id.clone()
     {
-        return Err(AppError::DomainError(
-            DomainVenueError::EditPermissionDenied.into(),
-        ));
+        return Err(DomainVenueError::EditPermissionDenied.into());
     }
     repo.delete_images(deletion.image_id, deletion.venue_id)
         .await?;

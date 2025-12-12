@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
+use domain::domain_error::DomainError;
 use domain::rental_domain::RentalRespository;
 use domain_core::utils::Clock;
 
-use crate::app_error::{AppError, AppResult};
+use crate::app_error::AppResult;
 use crate::{AppUseCase, Outcome};
 
 pub async fn update_rental_time(
@@ -16,7 +17,7 @@ pub async fn update_rental_time(
 
     let rental = rental
         .set_rental_date(time, time_range.0, time_range.1, organizer_id)
-        .map_err(|e| AppError::EntityInvalid {
+        .map_err(|e| DomainError::EntityInvalid {
             entity_type: "rental".to_string(),
             cause: e.to_string(),
         })?;
