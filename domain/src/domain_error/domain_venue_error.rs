@@ -16,4 +16,7 @@ pub enum DomainVenueError {
 
     #[error("It doesn't have permission to edit venue.")]
     EditPermissionDenied,
+
+    #[error("The venue is unpublished.")]
+    VenueIsUnpublished,
 }
