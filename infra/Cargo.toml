@@ -62,4 +62,7 @@ name = "infra_lib"
 
 [[bin]]
 path = "src/main.rs"
-name = "infra_name"
+name = "infra_app"
+
+[lints.rust]
+deprecated = "allow"
