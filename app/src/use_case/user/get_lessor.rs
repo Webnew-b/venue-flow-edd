@@ -13,6 +13,7 @@ pub async fn get_lessor_detail(
         .user()
         .id()
         .ok_or(AppError::IdInexisted("user".to_string()))?;
+    //todo return venues from lessor
     let venues = vec!["aaa".to_string()];
 
     let res = LessorDetail {
