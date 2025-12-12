@@ -22,6 +22,8 @@ pub mod upload_venue_image;
 
 pub fn index() -> Scope {
     web::scope("/venue")
+        .service(self::get_venue::get_venue)
+        .service(self::get_venue_list::get_venue_list)
         .service(
             web::scope("")
                 .wrap(from_fn(encrypt_middleware))
@@ -35,8 +37,6 @@ pub fn index() -> Scope {
                 .service(self::manage_venue_status::publish_venue)
                 .service(self::manage_venue_status::unpublish_venue),
         )
-        .service(self::get_venue::get_venue)
-        .service(self::get_venue_list::get_venue_list)
 }
 
 async fn venue_auth(
