@@ -23,9 +23,6 @@ pub enum DatabaseError {
     #[error("Conld not select the element in database.")]
     SelectFail,
 
-    #[error("Data is not found.")]
-    DataNotFound,
-
     #[error("Failed to save entity.")]
     SaveEntityFail,
 

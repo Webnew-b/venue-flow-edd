@@ -17,11 +17,8 @@ pub enum DomainError {
     #[error(transparent)]
     DomainVenueError(#[from] DomainVenueError),
 
-    #[error("Infra error:{message}")]
-    InfraError {
-        message: String,
-        source: Box<dyn std::error::Error + Send + Sync>,
-    },
+    #[error(transparent)]
+    InfraError(#[from] InfraError),
 
     #[error("Event error:{message}")]
     EventError {
@@ -51,4 +48,42 @@ pub enum DomainError {
         #[source]
         source: domain_core::domain_core_error::DomainCoreError,
     },
+
+    #[error("Fail to hash the password:{password}")]
+    HashPasswordFail { password: String },
+
+    #[error("Fail to verify the password")]
+    VerifyPasswordFail,
+}
+
+#[derive(Debug, Error)]
+pub enum InfraError {
+    #[error("Data select fail,Cause:{message}.")]
+    DataSelectFail {
+        message: String,
+        source: Box<dyn std::error::Error + Sync + Send>,
+    },
+    #[error("Data save fail,Cause:{message}.")]
+    DataSaveFail {
+        message: String,
+        source: Box<dyn std::error::Error + Sync + Send>,
+    },
+
+    #[error("System is block,cause:{message}.")]
+    SystemError { message: String },
+
+    #[error("{message}")]
+    MiddlewareError {
+        message: String,
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
+
+    #[error("Access denied.")]
+    AccessDenied,
+
+    #[error("File Format is invalid.")]
+    FileFormatInvalid,
+
+    #[error("iThe server has occur an unexpected error.")]
+    ServerError,
 }

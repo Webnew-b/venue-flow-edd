@@ -1,4 +1,5 @@
 use domain::domain_error::DomainError;
+use domain::domain_error::InfraError as DomainInfraError;
 use thiserror::Error;
 
 use crate::config::ConfigError;
@@ -28,12 +29,6 @@ pub enum InfraError {
 
     #[error("Fail to construct the log executor.")]
     FailToConstructLog,
-
-    #[error("Fail to hash the password:{password}")]
-    HashPasswordFail { password: String },
-
-    #[error("Fail to verify the password")]
-    VerifyPasswordFail,
 
     #[error("Fail to save image to repository.")]
     SaveImageFail,
@@ -65,9 +60,58 @@ pub enum InfraError {
 
 impl From<InfraError> for DomainError {
     fn from(value: InfraError) -> Self {
-        DomainError::InfraError {
-            message: value.to_string(),
-            source: Box::new(value),
+        match value {
+            InfraError::OssError(e) => DomainInfraError::MiddlewareError {
+                message: e.to_string(),
+                source: e.into(),
+            },
+            InfraError::RedisError(e) => DomainInfraError::MiddlewareError {
+                message: e.to_string(),
+                source: e.into(),
+            },
+            InfraError::ConfigError(e) => DomainInfraError::MiddlewareError {
+                message: e.to_string(),
+                source: e.into(),
+            },
+            InfraError::QueueError(e) => DomainInfraError::MiddlewareError {
+                message: e.to_string(),
+                source: e.into(),
+            },
+
+            InfraError::DatabaseError(database_error) => match database_error {
+                DatabaseError::ConnectionRefused { source } => {
+                    DomainInfraError::SystemError {
+                        message: source.to_string(),
+                    }
+                },
+                DatabaseError::Other(s) => {
+                    DomainInfraError::SystemError { message: s }
+                },
+                DatabaseError::DeleteEntityFail => todo!(),
+                e => DomainInfraError::DataSelectFail {
+                    message: e.to_string(),
+                    source: e.into(),
+                },
+            },
+
+            InfraError::FailToConstructLog
+            | InfraError::SaveImageFail
+            | InfraError::FileNotRead => DomainInfraError::ServerError,
+
+            InfraError::ObtainExtensionFail
+            | InfraError::FileNotFound
+            | InfraError::FileTypeIsInvalid => {
+                DomainInfraError::FileFormatInvalid
+            },
+
+            InfraError::FailToInitEventSystem { message }
+            | InfraError::FailToDecodeJWT { message }
+            | InfraError::FailToInitHttpServer { message } => {
+                DomainInfraError::SystemError { message }
+            },
+
+            InfraError::AccessDenied => DomainInfraError::AccessDenied,
         }
+        .into()
     }
 }

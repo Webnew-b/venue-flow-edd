@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 
 use actix_multipart::form::tempfile::TempFile;
 use actix_web::{web, HttpResponse, Responder, ResponseError};
+use domain::domain_error::DomainError;
 use image::{ImageFormat, ImageReader};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -70,6 +71,49 @@ pub(crate) enum CustomResponseError {
     MethodNotAllowed(String),
     Other(String, CodeEnum),
     ServiceError,
+}
+
+impl From<DomainError> for CustomResponseError {
+    fn from(value: DomainError) -> Self {
+        match value {
+            DomainError::DomainUserError(domain_user_error) => {
+                                match domain_user_error {
+                                    domain::domain_error::domain_user_error::DomainUserError::Other(s) => Self::Other(s,CodeEnum::ServiceError),
+                                    domain::domain_error::domain_user_error::DomainUserError::PasswordIncorrect => Self::Forbidden("Password is Incorrect.".to_string()),
+                                    e => Self::BadRequest(e.to_string()) 
+                                }
+                            },
+            DomainError::DomaianRentalError(domain_rental_error) => {
+                                match domain_rental_error{
+                                    domain::domain_error::domain_rental_error::DomainRentalError::Other(s) => Self::Other(s,CodeEnum::ServiceError),
+                                    domain::domain_error::domain_rental_error::DomainRentalError::UserNotFound => Self::NotFound("user is not found".to_string()),
+                                    e => Self::BadRequest(e.to_string()) 
+                                }
+                            },
+            DomainError::DomainVenueError(domain_venue_error) => {
+                                match domain_venue_error {
+                                    domain::domain_error::domain_venue_error::DomainVenueError::Other(s) => Self::Other(s,CodeEnum::ServiceError),
+                                    domain::domain_error::domain_venue_error::DomainVenueError::EditPermissionDenied => Self::Forbidden("Venue could not edit.".to_string()),
+                                    e => Self::BadRequest(e.to_string()) 
+                                }
+                            },
+            DomainError::EventError { .. } => Self::ServiceError,
+            DomainError::DataIsNotFound(s) => Self::NotFound(format!("{} is not found.",s)),
+            DomainError::IdInexisted(_) =>Self::ServiceError ,
+            DomainError::EntityInvalid { entity_type, cause } => Self::BadRequest(format!("{} format is invalid,cause:{}",entity_type,cause)),
+            DomainError::CreateEntityFailed { message ,.. } |
+                    DomainError::UpdateEntityFailed {  message, .. } => Self::BadRequest(message) ,
+            DomainError::InfraError(infra_error) => {
+                match infra_error {
+                    domain::domain_error::InfraError::AccessDenied => Self::Unauthorized("Access denied.".to_string()),
+                    domain::domain_error::InfraError::FileFormatInvalid => Self::BadRequest("File format is invalid.".to_string()),
+                    _ => Self::ServiceError,
+                }
+            },
+            DomainError::HashPasswordFail { password } => Self::BadRequest(format!("Password format is invalid:{}",password)),
+            DomainError::VerifyPasswordFail => Self::BadRequest("Password is invalid.".to_string()),
+        }
+    }
 }
 
 impl fmt::Display for CustomResponseError {

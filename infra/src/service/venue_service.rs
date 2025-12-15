@@ -13,8 +13,9 @@ use domain_core::{
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType,
-    LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
+    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult,
+    JoinType, LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    QuerySelect,
 };
 
 use crate::{
@@ -150,8 +151,8 @@ impl VenueRepository for VenueService {
                 tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
-        let venue = venue
-            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+        let venue =
+            venue.ok_or(DomainError::DataIsNotFound("venue".to_string()))?;
         let venue_images = VenueImageUri::Entity::find()
             .filter(VenueImageUri::Column::VenueId.eq(venue.id))
             .all(self.database.deref())
@@ -371,8 +372,8 @@ impl VenueRepository for VenueService {
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
-        let venue = venue
-            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+        let venue =
+            venue.ok_or(DomainError::DataIsNotFound("venue".to_string()))?;
         let (lessor, user) = LessorCrate::Entity::find_by_id(venue.lessor_id)
             .find_also_related(UserCrate::Entity)
             .one(self.database.deref())
@@ -381,10 +382,10 @@ impl VenueRepository for VenueService {
                 tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?
-            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+            .ok_or(DomainError::DataIsNotFound("lessor".to_string()))?;
 
         let user =
-            user.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+            user.ok_or(DomainError::DataIsNotFound("user".to_string()))?;
         let user = db_user_to_domain_user(user)?;
         let lessor = db_lessor_to_domain(user, lessor)?;
         Ok(lessor)
@@ -423,9 +424,7 @@ impl VenueRepository for VenueService {
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         if res.len() < 1 {
-            return Err(
-                InfraError::DatabaseError(DatabaseError::DataNotFound).into()
-            );
+            return Err(DomainError::DataIsNotFound("venue image".to_string()));
         }
         VenueImageUri::Entity::delete_many()
             .filter(VenueImageUri::Column::Id.is_in(images))

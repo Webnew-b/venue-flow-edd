@@ -91,8 +91,8 @@ impl RentalRespository for RentalService {
                 tracing::error!("{}", e);
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
-        let res = rental
-            .ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+        let res =
+            rental.ok_or(DomainError::DataIsNotFound("rental".to_string()))?;
         db_rental_to_domain(res)
     }
 

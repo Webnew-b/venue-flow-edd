@@ -135,7 +135,7 @@ impl PasswordHasher for UtilService {
     ) -> Result<String, domain::domain_error::DomainError> {
         let password = hash(password, DEFAULT_COST).map_err(|e| {
             tracing::error!("{}", e);
-            InfraError::HashPasswordFail {
+            DomainError::HashPasswordFail {
                 password: password.to_string(),
             }
         })?;
@@ -149,7 +149,7 @@ impl PasswordHasher for UtilService {
     ) -> Result<(), domain::domain_error::DomainError> {
         let res = verify(password, hashed).map_err(|e| {
             tracing::error!("{}", e);
-            InfraError::VerifyPasswordFail
+            DomainError::VerifyPasswordFail
         })?;
         if res {
             return Ok(());

@@ -373,7 +373,7 @@ impl UserRepository for UserService {
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
         let user =
-            user.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+            user.ok_or(DomainError::DataIsNotFound("user".to_string()))?;
         db_user_to_domain_user(user)
     }
 
@@ -394,7 +394,7 @@ impl UserRepository for UserService {
             InfraError::DatabaseError(DatabaseError::SelectFail)
         })?;
         let user =
-            user.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+            user.ok_or(DomainError::DataIsNotFound("user".to_string()))?;
         db_user_to_domain_user(user)
     }
 
@@ -472,7 +472,7 @@ impl UserRepository for UserService {
     ) -> Result<Organizer, DomainError> {
         let res = self.find_user_has_organizer_role(user_id).await?;
         let res =
-            res.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound))?;
+            res.ok_or(DomainError::DataIsNotFound("organizer".to_string()))?;
         Ok(res)
     }
 
@@ -481,7 +481,7 @@ impl UserRepository for UserService {
         user_id: i64,
     ) -> Result<Lessor, DomainError> {
         let res = self.find_user_has_lessor_role(user_id).await?;
-        res.ok_or(InfraError::DatabaseError(DatabaseError::DataNotFound).into())
+        res.ok_or(DomainError::DataIsNotFound("lessor".to_string()))
     }
 
     async fn find_lessor_by_id(&self, id: i64) -> Result<Lessor, DomainError> {
@@ -493,10 +493,9 @@ impl UserRepository for UserService {
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
-        self.get_user_by_lessor(lessor).await?.ok_or(
-            InfraError::DatabaseError(DatabaseError::DataNotFound.into())
-                .into(),
-        )
+        self.get_user_by_lessor(lessor)
+            .await?
+            .ok_or(DomainError::DataIsNotFound("lessor".to_string()))
     }
 
     async fn find_organizer_by_id(
@@ -511,8 +510,8 @@ impl UserRepository for UserService {
                 InfraError::DatabaseError(DatabaseError::SelectFail)
             })?;
 
-        self.get_user_by_organizer(organizer).await?.ok_or(
-            InfraError::DatabaseError(DatabaseError::DataNotFound).into(),
-        )
+        self.get_user_by_organizer(organizer)
+            .await?
+            .ok_or(DomainError::DataIsNotFound("organizer".to_string()))
     }
 }
