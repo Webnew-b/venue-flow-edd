@@ -7,7 +7,9 @@ use actix_web::{
 use chrono::Utc;
 use domain_core::utils::Clock;
 
-use crate::api::{middleware::encrypt::UserAuthRequest, CustomResponseError};
+use crate::api::{
+    middleware::encrypt::UserAuthRequest, CustomResponse, CustomResponseError,
+};
 
 pub mod cannel_rental_req;
 pub mod create_rental_req;
@@ -19,20 +21,31 @@ pub fn index() -> Scope {
     web::scope("/rental")
         .service(
             web::scope("/organizer")
-                .wrap(from_fn(super::middleware::encrypt::encrypt_middleware))
                 .wrap(from_fn(rental_organizer_auth))
+                .wrap(from_fn(super::middleware::encrypt::encrypt_middleware))
                 .service(self::create_rental_req::create_rental_req)
                 .service(self::cannel_rental_req::cancel_rental_request)
                 .service(self::update_rental_time::update_rental_time),
         )
         .service(
             web::scope("/lessor")
-                .wrap(from_fn(super::middleware::encrypt::encrypt_middleware))
                 .wrap(from_fn(rental_lessor_auth))
+                .wrap(from_fn(super::middleware::encrypt::encrypt_middleware))
                 .service(self::process_rental_req::approve_rental_request)
                 .service(self::get_rental_reqs::get_rental_requests)
                 .service(self::process_rental_req::reject_rental_request),
         )
+}
+
+fn create_error_json(
+    msg: &str,
+    code: super::response_code::CodeEnum,
+) -> String {
+    let c_res = CustomResponse::<()>::new(msg, code, None);
+    serde_json::to_string(&c_res).unwrap_or_else(|e| {
+        tracing::error!("{}", e);
+        r#"{"code":"500","message":"serialize failed","data":null}"#.to_string()
+    })
 }
 
 async fn rental_organizer_auth(
@@ -40,9 +53,12 @@ async fn rental_organizer_auth(
     next: Next<BoxBody>,
 ) -> Result<ServiceResponse<BoxBody>, actix_web::Error> {
     let ext = req.extensions();
-    let organizer = ext
-        .get::<UserAuthRequest>()
-        .ok_or(actix_web::error::ErrorBadRequest("Access denied."))?;
+    let organizer = ext.get::<UserAuthRequest>().ok_or(
+        actix_web::error::ErrorForbidden(create_error_json(
+            "Access denied.",
+            super::response_code::CodeEnum::Forbidden,
+        )),
+    )?;
     if organizer.organizer_id.is_none() {
         let c_res = super::CustomResponse::<()>::new(
             "Bad request",
@@ -65,9 +81,12 @@ async fn rental_lessor_auth(
     next: Next<BoxBody>,
 ) -> Result<ServiceResponse<BoxBody>, actix_web::Error> {
     let ext = req.extensions();
-    let lessor_id = ext
-        .get::<UserAuthRequest>()
-        .ok_or(actix_web::error::ErrorUnauthorized("Access denied."))?;
+    let lessor_id = ext.get::<UserAuthRequest>().ok_or(
+        actix_web::error::ErrorForbidden(create_error_json(
+            "Access denied.",
+            super::response_code::CodeEnum::Forbidden,
+        )),
+    )?;
     if lessor_id.lessor_id.is_none() {
         let c_res = super::CustomResponse::<()>::new(
             "Bad request",

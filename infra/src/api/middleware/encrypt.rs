@@ -16,6 +16,14 @@ fn create_bad_request_res(req: HttpRequest) -> ServiceResponse {
     ServiceResponse::new(req, http_res.map_into_boxed_body())
 }
 
+fn create_error_json(msg: &str, code: CodeEnum) -> String {
+    let c_res = CustomResponse::<()>::new(msg, code, None);
+    serde_json::to_string(&c_res).unwrap_or_else(|e| {
+        tracing::error!("{}", e);
+        r#"{"code":"500","message":"serialize failed","data":null}"#.to_string()
+    })
+}
+
 #[derive(Debug)]
 pub(crate) struct UserAuthRequest {
     pub user_id: i64,
@@ -27,7 +35,10 @@ fn option_string2i64(s: Option<String>) -> Result<Option<i64>, Error> {
     s.map(|s| {
         s.parse::<i64>().map_err(|e| {
             tracing::error!("{}", e);
-            actix_web::error::ErrorUnauthorized("Token format is illegal.")
+            actix_web::error::ErrorUnauthorized(create_error_json(
+                "Token format is illegal.",
+                CodeEnum::Unauthorized,
+            ))
         })
     })
     .transpose()
@@ -41,7 +52,7 @@ pub async fn encrypt_middleware(
     if state.is_none() {
         tracing::error!("App State is missing.");
         return Err(actix_web::error::ErrorInternalServerError(
-            "500 Server Error",
+            create_error_json("500 Server Error", CodeEnum::ServiceError),
         ));
     }
     let state = state.unwrap();
@@ -54,7 +65,10 @@ pub async fn encrypt_middleware(
         Some(e) => {
             let token = e.to_str().map_err(|e| {
                 tracing::error!("{}", e);
-                actix_web::error::ErrorUnauthorized("Token format is illegal.")
+                actix_web::error::ErrorUnauthorized(create_error_json(
+                    "Token format is illegal.",
+                    CodeEnum::Unauthorized,
+                ))
             })?;
             let claims = state
                 .user_service
@@ -63,15 +77,19 @@ pub async fn encrypt_middleware(
                 .await
                 .map_err(|e| {
                 tracing::error!("{}", e);
-                actix_web::error::ErrorForbidden("Access denied.")
+                actix_web::error::ErrorForbidden(create_error_json(
+                    "Access denied.",
+                    CodeEnum::Forbidden,
+                ))
             })?;
             tracing::info!("User id:{} request middleware.", &claims.sub);
             let auth_req = UserAuthRequest {
                 user_id: claims.sub.parse::<i64>().map_err(|e| {
                     tracing::error!("{}", e);
-                    actix_web::error::ErrorUnauthorized(
+                    actix_web::error::ErrorUnauthorized(create_error_json(
                         "Token format is illegal.",
-                    )
+                        CodeEnum::Unauthorized,
+                    ))
                 })?,
                 lessor_id: option_string2i64(claims.lessor_id)?,
                 organizer_id: option_string2i64(claims.organizer_id)?,
@@ -84,7 +102,7 @@ pub async fn encrypt_middleware(
         },
     };
 
-    tracing::debug!("you request this middleware.");
+    tracing::debug!("request this middleware:encrypt_middleware");
     next.call(req).await
 }
 

@@ -26,8 +26,8 @@ pub fn index() -> Scope {
         .service(self::get_venue_list::get_venue_list)
         .service(
             web::scope("")
-                .wrap(from_fn(encrypt_middleware))
                 .wrap(from_fn(venue_auth))
+                .wrap(from_fn(encrypt_middleware))
                 .service(self::get_venue_by_user::get_venue_by_user)
                 .service(self::create_venue::create_venue)
                 .service(self::update_venue::update_venue)
