@@ -54,11 +54,7 @@ pub async fn update_user(
         state.util_service.deref(),
         &clock,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let _ = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);

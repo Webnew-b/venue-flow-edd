@@ -46,11 +46,7 @@ pub async fn update_venue(
         command,
         &time,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);
@@ -94,11 +90,7 @@ pub async fn update_venue_image(
         &time,
         command,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);
@@ -131,11 +123,7 @@ pub async fn delete_venue_image(
         state.venue_service.deref(),
         command,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let _ = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);

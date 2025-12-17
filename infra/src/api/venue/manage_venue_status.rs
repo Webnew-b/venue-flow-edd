@@ -30,11 +30,7 @@ pub async fn publish_venue(
         data.venue_id,
         lessor_id,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);
@@ -59,11 +55,7 @@ pub async fn unpublish_venue(
         data.venue_id,
         lessor_id,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);

@@ -17,11 +17,7 @@ pub async fn get_rental_requests(
         state.rental_service.deref(),
         lessor_id,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);

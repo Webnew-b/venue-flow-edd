@@ -18,11 +18,7 @@ pub async fn get_venue(
         state.user_service.deref(),
         id,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);

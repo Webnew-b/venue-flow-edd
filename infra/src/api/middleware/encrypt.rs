@@ -11,7 +11,7 @@ use crate::web::app_state::AppState;
 
 fn create_bad_request_res(req: HttpRequest) -> ServiceResponse {
     let c_res =
-        CustomResponse::<()>::new("Bad request", CodeEnum::BadRequest, None);
+        CustomResponse::<()>::new("In Bad request", CodeEnum::BadRequest, None);
     let http_res = HttpResponse::BadRequest().json(c_res);
     ServiceResponse::new(req, http_res.map_into_boxed_body())
 }
@@ -91,11 +91,5 @@ pub async fn encrypt_middleware(
 pub fn add_service_error_handle<B>(
     res: actix_web::dev::ServiceResponse<B>,
 ) -> actix_web::Result<ErrorHandlerResponse<B>> {
-    let c_res =
-        CustomResponse::<()>::new("Bad request", CodeEnum::BadRequest, None);
-    let http_res = HttpResponse::BadRequest().json(c_res);
-    Ok(ErrorHandlerResponse::Response(ServiceResponse::new(
-        res.request().clone(),
-        http_res.map_into_right_body(),
-    )))
+    Ok(ErrorHandlerResponse::Response(res.map_into_left_body()))
 }

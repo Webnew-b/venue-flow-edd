@@ -26,15 +26,7 @@ pub async fn upload_venue_image(
         let path = upload_image(temp_path, i)?;
         save_path.push(path);
     }
-    let res = state
-        .util_service
-        .deref()
-        .upload_images(save_path)
-        .await
-        .map_err(|e| {
-            tracing::error!("{}", e);
-            CustomResponseError::BadRequest(e.to_string())
-        })?;
+    let res = state.util_service.deref().upload_images(save_path).await?;
 
     let res = CustomResponse::success_by_response(Some(res));
     Ok(res)

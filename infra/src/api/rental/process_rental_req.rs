@@ -33,11 +33,7 @@ pub async fn approve_rental_request(
             data.rental_id,
             &time,
         )
-        .await
-        .map_err(|e| {
-            tracing::error!("{}", e);
-            CustomResponseError::BadRequest(e.to_string())
-        })?;
+        .await?;
 
     let _ = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);

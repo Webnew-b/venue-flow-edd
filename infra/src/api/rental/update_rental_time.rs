@@ -34,11 +34,7 @@ pub async fn update_rental_time(
         data.rental_id,
         &time,
     )
-    .await
-    .map_err(|e| {
-        tracing::error!("{}", e);
-        CustomResponseError::BadRequest(e.to_string())
-    })?;
+    .await?;
 
     let res = state.event_system.process_outcome(res).await.map_err(|e| {
         tracing::error!("{}", e);
