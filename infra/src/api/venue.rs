@@ -9,7 +9,7 @@ use domain_core::utils::Clock;
 
 use crate::api::{
     middleware::encrypt::{encrypt_middleware, UserAuthRequest},
-    CustomResponseError,
+    CustomResponse, CustomResponseError,
 };
 
 pub mod create_venue;
@@ -39,14 +39,28 @@ pub fn index() -> Scope {
         )
 }
 
+fn create_error_json(
+    msg: &str,
+    code: super::response_code::CodeEnum,
+) -> String {
+    let c_res = CustomResponse::<()>::new(msg, code, None);
+    serde_json::to_string(&c_res).unwrap_or_else(|e| {
+        tracing::error!("{}", e);
+        r#"{"code":"500","message":"serialize failed","data":null}"#.to_string()
+    })
+}
+
 async fn venue_auth(
     req: ServiceRequest,
     next: Next<BoxBody>,
 ) -> Result<ServiceResponse<BoxBody>, actix_web::Error> {
     let ext = req.extensions();
-    let lessor_id = ext
-        .get::<UserAuthRequest>()
-        .ok_or(actix_web::error::ErrorUnauthorized("Access denied."))?;
+    let lessor_id = ext.get::<UserAuthRequest>().ok_or(
+        actix_web::error::ErrorForbidden(create_error_json(
+            "Access denied.",
+            super::response_code::CodeEnum::Forbidden,
+        )),
+    )?;
     if lessor_id.lessor_id.is_none() {
         let c_res = super::CustomResponse::<()>::new(
             "Forbidden",
