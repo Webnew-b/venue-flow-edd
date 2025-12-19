@@ -44,6 +44,9 @@ fn option_string2i64(s: Option<String>) -> Result<Option<i64>, Error> {
     .transpose()
 }
 
+// TODO: Refactor this middleware into three separate concerns: Token, Auth,
+// and Identify. Extract the authentication logic into a dedicated service
+// to decouple it from the user service.
 pub async fn encrypt_middleware(
     req: ServiceRequest,
     next: Next<BoxBody>,
