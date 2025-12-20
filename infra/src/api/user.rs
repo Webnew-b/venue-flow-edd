@@ -19,11 +19,7 @@ pub fn index() -> Scope {
         .service(
             web::scope("")
                 .wrap(from_fn(encrypt_middleware))
-                .service(self::update_profile::update_user),
-        )
-        .service(
-            web::scope("")
-                .wrap(from_fn(encrypt_middleware))
+                .service(self::update_profile::update_user)
                 .service(self::get_user_profile::get_user_profile),
         )
 }
