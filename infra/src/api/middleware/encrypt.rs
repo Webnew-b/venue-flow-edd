@@ -9,13 +9,6 @@ use crate::api::response_code::CodeEnum;
 use crate::api::CustomResponse;
 use crate::web::app_state::AppState;
 
-fn create_bad_request_res(req: HttpRequest) -> ServiceResponse {
-    let c_res =
-        CustomResponse::<()>::new("In Bad request", CodeEnum::BadRequest, None);
-    let http_res = HttpResponse::BadRequest().json(c_res);
-    ServiceResponse::new(req, http_res.map_into_boxed_body())
-}
-
 fn create_error_json(msg: &str, code: CodeEnum) -> String {
     let c_res = CustomResponse::<()>::new(msg, code, None);
     serde_json::to_string(&c_res).unwrap_or_else(|e| {
@@ -100,8 +93,10 @@ pub async fn encrypt_middleware(
             req.extensions_mut().insert(auth_req);
         },
         None => {
-            return Ok(create_bad_request_res(req.request().clone()));
-            //return Err(actix_web::error::ErrorBadRequest("Access denied."));
+            return Err(actix_web::error::ErrorForbidden(create_error_json(
+                "Access denied.",
+                CodeEnum::Forbidden,
+            )));
         },
     };
 
