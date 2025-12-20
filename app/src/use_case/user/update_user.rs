@@ -3,7 +3,7 @@ use domain::domain_error::DomainError;
 use domain::user_domain::{UserRepository, UserValidation};
 use domain::util_trait::{ImageRepository, PasswordHasher};
 use domain_core::user::user_update::UserUpdate;
-use domain_core::user::UserGender;
+use domain_core::user::{validate_password, UserGender};
 use domain_core::utils::Clock;
 
 use crate::app_error::AppResult;
@@ -47,8 +47,15 @@ async fn get_update_struct<'image>(
     }
 
     if let Some(p) = update.password {
+        let p = validate_password(p).map_err(|e| {
+            DomainError::UpdateEntityFailed {
+                entity_type: "user".to_string(),
+                message: e.to_string(),
+                source: e,
+            }
+        })?;
         let password = password_hasher.hash(p.as_str())?;
-        update_struct.password = Some(password);
+        update_struct.password = Some(password.into());
     }
     update_struct.introduce = update.introduce;
 

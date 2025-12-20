@@ -19,6 +19,7 @@ pub async fn register_user<'image>(
     data: RegisterUserCommand<'image>,
 ) -> AppResult<Outcome<RegisteredUserDto>> {
     let builder = UserBuilder::default();
+    let password = data.password.clone();
 
     let email = data.email;
     validator.exist_email(&email).await?;
@@ -28,8 +29,7 @@ pub async fn register_user<'image>(
     validator.exist_username(&username).await?;
     let builder = builder.username(username);
 
-    let password = password_hasher.hash(&data.password)?;
-    let builder = builder.password(password).introduce(data.introduce);
+    let builder = builder.password(password.clone()).introduce(data.introduce);
 
     let gender = UserGender::get_gender(data.gender.as_str())
         .ok_or(DomainUserError::InvalidGender)?;
@@ -51,6 +51,10 @@ pub async fn register_user<'image>(
         entity_type: "user".to_string(),
         cause: e.to_string(),
     })?;
+
+    let password = password_hasher.hash(&password)?;
+
+    let user = user.with_password_hash_unchecked(password);
 
     let user = repo.create_user(user).await?;
 

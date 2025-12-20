@@ -2,6 +2,7 @@ use garde::Validate;
 
 use crate::domain_core_error::{DomainCoreError, DomainCoreResult};
 use crate::user::user_error::UserError;
+use crate::user::HashedPassword;
 
 use super::UserGender;
 
@@ -13,8 +14,8 @@ pub struct UserUpdate {
     #[garde(email)]
     pub email: Option<String>,
 
-    #[garde(length(min = 8, max = 50))]
-    pub password: Option<String>,
+    #[garde(skip)]
+    pub password: Option<HashedPassword>,
 
     #[garde(url)]
     pub avatar: Option<String>,

@@ -10,7 +10,7 @@ macro_rules! field_fill {
     ($target:expr,$source:expr,$($field:ident),+) => {
         $(
             if let Some(item) = $source.$field {
-                $target.$field = item;
+                $target.$field = item.into();
             }
         )+
     };
@@ -29,6 +29,30 @@ pub mod lessor;
 pub mod organizer;
 pub mod user_error;
 pub mod user_update;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HashedPassword(String);
+
+impl From<String> for HashedPassword {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl From<HashedPassword> for String {
+    fn from(value: HashedPassword) -> Self {
+        value.0
+    }
+}
+
+pub fn validate_password(pwd: String) -> Result<String, DomainCoreError> {
+    if pwd.len() < 8 && pwd.len() > 50 {
+        return Err(DomainCoreError::UserError(
+            user_error::UserError::PasswordInvalid,
+        ));
+    }
+    Ok(pwd)
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UserGender {
@@ -115,6 +139,10 @@ pub struct User {
 }
 
 impl User {
+    pub fn with_password_hash_unchecked(mut self, password: String) -> Self {
+        self.password = password;
+        self
+    }
     pub fn update_id(mut self, id: i64) -> Self {
         self.id = Some(id);
         self
