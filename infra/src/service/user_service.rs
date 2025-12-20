@@ -292,6 +292,7 @@ impl UserGenerator for UserService {
             tracing::error!("{}", e);
             DomainUserError::InvalidTokenGeneration
         })?;
+        let token = format!("Bearer {}", token);
         Ok(UserLoginToken { token })
     }
 }
