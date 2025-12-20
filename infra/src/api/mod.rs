@@ -250,7 +250,9 @@ pub(crate) fn upload_image(
         CustomResponseError::ServiceError
     })?;
 
-    let save_path: PathBuf = [path, &unique_name, ".", ext].iter().collect();
+    let filename = format!("{}.{}",&unique_name, ext);
+    let save_path = PathBuf::from(path).join(filename);
+    tracing::debug!("{}",save_path.clone().to_string_lossy());
 
     let _ = file.file.persist(save_path.as_path()).map_err(|e| {
         tracing::error!("{}", e);
