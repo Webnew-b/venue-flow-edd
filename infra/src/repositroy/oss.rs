@@ -177,7 +177,7 @@ async fn validate_bucket_exists(
 fn build_image_domain(config: &OssConfig) -> Result<String, OssError> {
     if let Some(custom_domain) = &config.custom_domain {
         let domain = custom_domain.trim_end_matches('/');
-        Ok(format!("https://{}/", domain))
+        Ok(format!("{}/", domain))
     } else {
         let region = config.region.as_deref().unwrap_or("us-east-1");
         let url = if region == "us-east-1" {

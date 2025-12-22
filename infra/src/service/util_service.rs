@@ -67,6 +67,8 @@ async fn upload_image(
 
     let file_name: &str = &gen_uuid_image_name(ext);
 
+    let domain = format!("{}{}/", domain, &bucket_name);
+
     let mut file_path = PathBuf::from_str(temp_folder).map_err(|e| {
         tracing::error!("{}", e);
         InfraError::SaveImageFail
@@ -84,13 +86,15 @@ async fn upload_image(
         bucket_name,
     };
 
-    let uri = save_file_to_oss(&client, image_path).await.map_err(|e| {
-        tracing::error!("{}", e);
-        InfraError::SaveImageFail
-    })?;
+    let file_name =
+        save_file_to_oss(&client, image_path).await.map_err(|e| {
+            tracing::error!("{}", e);
+            InfraError::SaveImageFail
+        })?;
 
-    let uri = format!("{}{}", domain, uri);
-    Ok(uri)
+    let domain = format!("{}{}", domain, file_name);
+
+    Ok(domain)
 }
 
 #[async_trait]

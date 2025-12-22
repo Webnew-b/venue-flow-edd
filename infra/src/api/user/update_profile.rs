@@ -32,6 +32,7 @@ pub async fn update_user(
 ) -> Result<HttpResponse, CustomResponseError> {
     let id = get_user_id(request)?;
     let temp_path = state.util_service.deref().get_temp_folder();
+    tracing::debug!("{:?}", form);
     let save_path = match form.avatar {
         Some(e) => Some(upload_image(temp_path, e)?),
         None => None,

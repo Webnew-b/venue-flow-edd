@@ -123,18 +123,18 @@ pub async fn save_file_to_oss<'a>(
 
     let s3_key = gen_uuid_image_name("webp");
 
-    let result = upload_object(
+    let _ = upload_object(
         client,
         &path.bucket_name,
         &s3_key,
         webp_data,
         Some("image/webp"),
     )
-    .await;
+    .await?;
 
     send2queue(temp_webp_path).await;
 
-    result
+    Ok(s3_key)
 }
 
 async fn send2queue(p: PathBuf) {
