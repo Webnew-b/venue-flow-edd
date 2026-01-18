@@ -13,9 +13,9 @@ use domain_core::{
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult,
-    JoinType, LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder,
-    QuerySelect,
+    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType,
+    LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
+    RelationTrait,
 };
 
 use crate::{
@@ -286,14 +286,8 @@ impl VenueRepository for VenueService {
     ) -> Result<Vec<IndexVenue>, DomainError> {
         let venues = VenueCrate::Entity::find()
             .filter(VenueCrate::Column::State.eq(VenueState::Published))
-            .join(
-                JoinType::InnerJoin,
-                VenueCrate::Entity::belongs_to(LessorCrate::Entity).into(),
-            )
-            .join(
-                JoinType::InnerJoin,
-                LessorCrate::Entity::belongs_to(UserCrate::Entity).into(),
-            )
+            .join(JoinType::InnerJoin, VenueCrate::Relation::Lessor.def())
+            .join(JoinType::InnerJoin, LessorCrate::Relation::User.def())
             .select_only()
             .column_as(VenueCrate::Column::Id, "venue_id")
             .column_as(VenueCrate::Column::Name, "venue_name")
@@ -314,7 +308,6 @@ impl VenueRepository for VenueService {
         let images = VenueImageUri::Entity::find()
             .filter(VenueImageUri::Column::VenueId.is_in(venue_ids))
             .order_by_asc(VenueImageUri::Column::CreateTime)
-            .group_by(VenueImageUri::Column::VenueId)
             .all(self.database.deref())
             .await
             .map_err(|e| {
