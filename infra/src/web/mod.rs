@@ -10,8 +10,12 @@ use crate::api::{self, default_service_handle_error};
 use crate::config::get_web_server_config;
 use crate::infra_error::InfraError;
 use crate::web::app_state::create_app_state;
+use crate::web::error_handle::{
+    form_error_handle, json_error_handle, path_error_handle, query_error_handle,
+};
 
 pub mod app_state;
+pub(super) mod error_handle;
 
 #[derive(Clone)]
 struct CustomRootSpanBuilder;
@@ -46,10 +50,18 @@ pub async fn start_web_server() -> anyhow::Result<()> {
 
     let server = HttpServer::new(move || {
         App::new()
+            .app_data(json_error_handle())
+            .app_data(form_error_handle())
+            .app_data(query_error_handle())
+            .app_data(path_error_handle())
             .wrap(TracingLogger::<CustomRootSpanBuilder>::new())
             .wrap(
                 ErrorHandlers::new()
-                    .handler(StatusCode::BAD_REQUEST, add_service_error_handle),
+                    .handler(StatusCode::BAD_REQUEST, add_service_error_handle)
+                    .handler(
+                        StatusCode::METHOD_NOT_ALLOWED,
+                        add_service_error_handle,
+                    ),
             )
             .default_service(web::route().to(default_service_handle_error))
             .app_data(web::Data::new(state.clone()))
