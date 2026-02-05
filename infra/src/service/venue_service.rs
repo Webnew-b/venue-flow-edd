@@ -13,9 +13,9 @@ use domain_core::{
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType,
-    LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
-    RelationTrait,
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, FromQueryResult,
+    JoinType, LoaderTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    QuerySelect, RelationTrait, TransactionError, TransactionTrait,
 };
 
 use crate::{
@@ -173,7 +173,7 @@ impl VenueRepository for VenueService {
         let venues = VenueCrate::Entity::find()
             .filter(VenueCrate::Column::LessorId.eq(id))
             .paginate(self.database.deref(), page.limit)
-            .fetch_page(page.page)
+            .fetch_page(page.page.saturating_sub(1))
             .await
             .map_err(|e| {
                 tracing::error!("{}", e);
@@ -213,7 +213,7 @@ impl VenueRepository for VenueService {
             .filter(VenueCrate::Column::Name.contains(name.as_str()))
             .filter(VenueCrate::Column::State.eq(VenueState::Published))
             .paginate(self.database.deref(), page.limit)
-            .fetch_page(page.page)
+            .fetch_page(page.page.saturating_sub(1))
             .await
             .map_err(|e| {
                 tracing::error!("{}", e);
@@ -244,30 +244,31 @@ impl VenueRepository for VenueService {
     }
 
     async fn create_venue(&self, v: Venue) -> Result<Venue, DomainError> {
-        let (venue, venue_images) = domain_venue_to_db(v.clone());
-        let venue = venue.insert(self.database.deref()).await.map_err(|e| {
-            tracing::error!("{}", e);
-            InfraError::DatabaseError(DatabaseError::SaveEntityFail)
-        })?;
-        let _ = VenueImageUri::Entity::insert_many(venue_images)
-            .exec(self.database.deref())
+        let (venue, _) = domain_venue_to_db(v.clone());
+        let id = self
+            .database
+            .deref()
+            .transaction::<_, i64, DbErr>(|txn| {
+                Box::pin(async {
+                    let venue = venue.insert(txn).await?;
+                    Ok(venue.id)
+                })
+            })
             .await
-            .map_err(|e| {
-                tracing::error!("{}", e);
-                InfraError::DatabaseError(DatabaseError::SaveEntityFail)
+            .map_err(|e| match e {
+                TransactionError::Connection(db_err) => {
+                    tracing::error!("{}", db_err);
+                    InfraError::DatabaseError(
+                        DatabaseError::TransactionCommitFail,
+                    )
+                },
+                TransactionError::Transaction(e) => {
+                    tracing::error!("{}", e);
+                    InfraError::DatabaseError(DatabaseError::SaveEntityFail)
+                },
             })?;
-        let v = v.update_id(venue.id);
-        let venue_images = VenueImageUri::Entity::find()
-            .filter(VenueImageUri::Column::VenueId.eq(venue.id))
-            .all(self.database.deref())
-            .await
-            .map_err(|e| {
-                tracing::error!("{}", e);
-                InfraError::DatabaseError(DatabaseError::SelectFail)
-            })?;
-        let venue_images =
-            venue_images.iter().map(venue_image_to_domain).collect();
-        let v = v.update_images(venue_images);
+
+        let v = v.update_id(id);
         Ok(v)
     }
 
@@ -297,7 +298,7 @@ impl VenueRepository for VenueService {
             .column_as(UserCrate::Column::Avatar, "lessor_avatar")
             .into_model::<VenueWithLessor>()
             .paginate(self.database.deref(), page.limit)
-            .fetch_page(page.page)
+            .fetch_page(page.page.saturating_sub(1))
             .await
             .map_err(|e| {
                 tracing::error!("{}", e);
