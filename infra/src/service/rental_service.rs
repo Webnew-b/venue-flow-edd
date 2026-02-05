@@ -102,10 +102,6 @@ impl RentalRespository for RentalService {
     ) -> Result<Vec<RentalRes>, DomainError> {
         let rentals = RentalCrate::Entity::find()
             .find_also_related(VenueCrate::Entity)
-            .join(
-                sea_orm::JoinType::InnerJoin,
-                RentalCrate::Relation::Venue.def(),
-            )
             .filter(VenueCrate::Column::LessorId.eq(lessor_id))
             .all(self.database.deref())
             .await
