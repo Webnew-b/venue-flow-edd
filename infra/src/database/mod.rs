@@ -31,6 +31,15 @@ pub enum DatabaseError {
 
     #[error("Fail to select the preant entity.")]
     SelectPreantEntityFail,
+
+    #[error("Fail to begin transaction.")]
+    TransactionBeginFail,
+
+    #[error("Fail to commit transaction.")]
+    TransactionCommitFail,
+
+    #[error("Fail to rollback transaction.")]
+    TransactionRollbackFail,
 }
 
 pub async fn start_db_connection() -> Result<Arc<DatabaseConnection>, InfraError>
