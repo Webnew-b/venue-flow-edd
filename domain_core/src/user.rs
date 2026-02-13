@@ -46,7 +46,7 @@ impl From<HashedPassword> for String {
 }
 
 pub fn validate_password(pwd: String) -> Result<String, DomainCoreError> {
-    if pwd.len() < 8 && pwd.len() > 50 {
+    if pwd.len() < 8 || pwd.len() > 50 {
         return Err(DomainCoreError::UserError(
             user_error::UserError::PasswordInvalid,
         ));
