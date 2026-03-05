@@ -4,12 +4,13 @@ use async_trait::async_trait;
 use domain::{
     domain_error::{domain_rental_error::DomainRentalError, DomainError},
     rental_domain::{rental_dto::RentalRes, RentalRespository},
+    PageLimit,
 };
 use domain_core::rental::{Rental, RentalBuilder};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, QuerySelect, RelationTrait,
+    ColumnTrait, PaginatorTrait, QueryOrder, QuerySelect, RelationTrait,
 };
 use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter};
 
@@ -99,11 +100,14 @@ impl RentalRespository for RentalService {
     async fn get_rental_lists(
         &self,
         lessor_id: i64,
+        page: PageLimit,
     ) -> Result<Vec<RentalRes>, DomainError> {
         let rentals = RentalCrate::Entity::find()
             .find_also_related(VenueCrate::Entity)
             .filter(VenueCrate::Column::LessorId.eq(lessor_id))
-            .all(self.database.deref())
+            .order_by_desc(RentalCrate::Column::Createtime)
+            .paginate(self.database.deref(), page.limit)
+            .fetch_page(page.page.saturating_sub(1))
             .await
             .map_err(|e| {
                 tracing::error!("{}", e);

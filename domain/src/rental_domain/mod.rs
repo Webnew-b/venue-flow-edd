@@ -3,6 +3,7 @@ use domain_core::rental::Rental;
 
 use crate::domain_error::DomainError;
 use crate::rental_domain::rental_dto::RentalRes;
+use crate::PageLimit;
 
 pub mod rental_dto;
 
@@ -13,6 +14,7 @@ pub trait RentalRespository: Sync + Send {
     async fn get_rental_lists(
         &self,
         lessor_id: i64,
+        page: PageLimit,
     ) -> Result<Vec<RentalRes>, DomainError>;
 
     async fn create_rental_request(
