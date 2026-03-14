@@ -1,0 +1,21 @@
+cognitive-complexity-threshold = 20
+
+too-many-arguments-threshold = 5
+
+type-complexity-threshold = 200
+
+enum-variant-size-threshold = 200
+
+trivial-copy-size-limit = 128
+
+stack-size-threshold = 1024
+
+disallowed-methods = [
+  "std::option::Option::unwrap",
+  "std::result::Result::unwrap",
+  "std::result::Result::expect",
+]
+
+disallowed-names = ["foo", "bar", "baz", "qux"]
+
+

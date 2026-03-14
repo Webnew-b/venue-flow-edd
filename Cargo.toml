@@ -1,0 +1,15 @@
+[workspace]
+members = [ 
+  "app",
+  "domain", 
+  "domain_core", 
+  "event", 
+  "infra", 
+  "util_macros"
+  ,"migration"]
+
+resolver = "2"
+
+
+[workspace.metadata.cargo-run-bin]
+default = "infra::infra_app" 

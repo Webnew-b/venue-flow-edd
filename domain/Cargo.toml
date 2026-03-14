@@ -1,0 +1,11 @@
+[package]
+name = "domain"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+thiserror = "2.0.12"
+serde = { version = "1.0.210", features = ["derive"] }
+
+domain_core = {path = "../domain_core"}
+async-trait = "0.1.88"

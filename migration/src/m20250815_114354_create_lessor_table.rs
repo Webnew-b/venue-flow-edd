@@ -1,0 +1,31 @@
+use sea_orm_migration::prelude::*;
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Replace the sample below with your own migration scripts
+        let db = manager.get_connection();
+        db.execute_unprepared(
+            r#"CREATE TABLE IF NOT EXISTS "lessor" (
+id BIGSERIAL PRIMARY KEY,
+user_id BIGSERIAL NOT NULL UNIQUE,
+phone varchar(255) NOT NULL,
+is_delete bool NOT NULL DEFAULT false,
+createTime timestamp DEFAULT now(),
+updateTime timestamp NOT NULL
+);"#,
+        )
+        .await?;
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let db = manager.get_connection();
+        db.execute_unprepared(r#"DROP TABLE IF EXISTS "lessor""#)
+            .await?;
+        Ok(())
+    }
+}

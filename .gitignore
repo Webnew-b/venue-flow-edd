@@ -1,0 +1,9 @@
+**/target/
+
+.env
+review/
+temp/
+**/perf.*
+flamegraph.svg
+
+**/.woodpecker 

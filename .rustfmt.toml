@@ -1,0 +1,24 @@
+edition = "2024"
+
+# 基本格式化选项
+max_width = 80
+tab_spaces = 4
+hard_tabs = false
+newline_style = "Auto"
+
+# 函数和控制流
+fn_params_layout = "Tall"
+use_small_heuristics = "Default"
+
+# 导入和重排
+reorder_imports = true
+remove_nested_parens = true
+merge_derives = true
+
+# 尾随逗号
+match_block_trailing_comma = true
+
+# 其他
+force_explicit_abi = false
+
+struct_field_align_threshold = 20

@@ -1,0 +1,68 @@
+[package]
+name = "infra"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+domain_core = {path = "../domain_core"}
+domain = {path = "../domain"}
+app = {path = "../app"}
+event = {path = "../event"}
+
+async-trait = "0.1.88"
+actix-multipart = "0.7.2"
+actix-web = "4.9.0"
+actix-web-validator = "6.0.0"
+
+bcrypt = "0.15.1"
+dotenv = "0.15.0"
+env_logger = "0.11.5"
+image = "0.25.5"
+lazy_static = "1.5.0"
+log = "0.4.22"
+once_cell = "1.20.2"
+rand = "0.8.5"
+redis = { version = "0.27.5",features = ["aio", "tokio-comp"]}
+deadpool-redis = "0.22.0"
+rsa = "0.9.7"
+rustflake = "0.1.1"
+sea-orm = { version = "^1.0.1",features = [ "sqlx-postgres","runtime-tokio-rustls","with-bigdecimal","macros"]}
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.133"
+thiserror = "2.0.12"
+tokio = { version = "1.40.0", features = ["rt", "rt-multi-thread","test-util","full"]}
+
+tracing = { version = "0.1.40", features = ["std"]}
+tracing-actix-web = "0.7.15"
+tracing-appender = "0.2.3"
+tracing-subscriber = { version = "0.3.18", features = ["std","fmt","env-filter","json"]}
+
+jsonwebtoken = "9.3.1"
+chrono = "0.4.41"
+aws-config = { version = "1.5", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.51"
+anyhow = "1.0.100"
+config = "0.15.18"
+garde = { version = "0.22.0", features = ["full"] }
+
+[dependencies.uuid]
+version = "1.11.0"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+]
+
+[dev-dependencies]
+sea-orm-cli = "1.0.1"
+
+[lib]
+path = "src/lib.rs"
+name = "infra_lib"
+
+[[bin]]
+path = "src/main.rs"
+name = "infra_app"
+
+[lints.rust]
+deprecated = "allow"

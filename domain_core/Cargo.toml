@@ -1,0 +1,11 @@
+[package]
+name = "domain_core"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.41"
+thiserror = "2.0.12"
+derive_builder = "0.20.2"
+garde = { version = "0.22.0", features = ["full"] }
+util_macros = {path = "../util_macros"}

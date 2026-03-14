@@ -1,0 +1,74 @@
+use domain::domain_error::domain_user_error::DomainUserError;
+use domain::domain_error::DomainError;
+use domain::user_domain::{UserRepository, UserValidation};
+use domain::util_trait::{ImageRepository, PasswordHasher};
+use domain_core::user::{UserBuilder, UserGender};
+use domain_core::utils::Clock;
+use garde::Validate;
+
+use crate::app_error::AppResult;
+use crate::commands::user_commands::{RegisterUserCommand, RegisteredUserDto};
+use crate::{AppUseCase, Outcome};
+
+pub async fn register_user<'image>(
+    repo: &impl UserRepository,
+    image_repo: &impl ImageRepository,
+    validator: &impl UserValidation,
+    time: &impl Clock,
+    password_hasher: &impl PasswordHasher,
+    data: RegisterUserCommand<'image>,
+) -> AppResult<Outcome<RegisteredUserDto>> {
+    let builder = UserBuilder::default();
+    let password = data.password.clone();
+
+    let email = data.email;
+    validator.exist_email(&email).await?;
+    let builder = builder.email(email);
+
+    let username = data.username;
+    validator.exist_username(&username).await?;
+    let builder = builder.username(username);
+
+    let builder = builder.password(password.clone()).introduce(data.introduce);
+
+    let gender = UserGender::get_gender(data.gender.as_str())
+        .ok_or(DomainUserError::InvalidGender)?;
+    let builder = builder.gender(gender);
+
+    let avatar = image_repo.upload_image(data.avatar).await?;
+    let user = builder
+        .avatar(avatar)
+        .updatetime(time.now())
+        .createtime(time.now())
+        .build()
+        .map_err(|e| DomainError::CreateEntityFailed {
+            entity_type: "user".to_string(),
+            message:     e.to_string(),
+            source:      e,
+        })?;
+
+    user.validate().map_err(|e| DomainError::EntityInvalid {
+        entity_type: "user".to_string(),
+        cause:       e.to_string(),
+    })?;
+
+    let password = password_hasher.hash(&password)?;
+
+    let user = user.with_password_hash_unchecked(password);
+
+    let user = repo.create_user(user).await?;
+
+    let id = user
+        .id()
+        .ok_or(DomainError::IdInexisted("user".to_string()))?;
+
+    let res = RegisteredUserDto {
+        id,
+        email: user.email().to_string(),
+        username: user.username().to_string(),
+        avatar: user.avatar().to_string(),
+        gender: user.gender().to_string(),
+    };
+
+    Ok(Outcome::new(res, AppUseCase::UserRegistrantion))
+}
