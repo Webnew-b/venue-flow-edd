@@ -162,14 +162,12 @@ core → domain → app → event → infra
 各层职责：
 
 | 层级   | 职责                   | 副作用等级 |
-|  | ---- | ---- |
+| ---- | ---- | ---- |
 | core   | 实体、值对象、业务校验 | 0          |
 | domain | 行为契约（trait、DTO） | 1          |
 | app    | UseCase 业务编排       | 2          |
 | event  | 事件调度与执行         | 2-3        |
 | infra  | 真实副作用实现         | 3          |
-
-
 
 # 核心业务功能
 
@@ -202,7 +200,7 @@ core → domain → app → event → infra
 EDD 支持 **按架构层级设计测试策略**。
 
 | 层级   | 测试方式          |
-|  | ----- |
+| ----- | ----- |
 | core   | 纯单元测试        |
 | domain | 契约测试          |
 | app    | UseCase Mock 测试 |
@@ -317,7 +315,7 @@ cargo run --bin migrate
 
 ```
 cd run/
-bash run.sh
+bash start.sh
 ```
 
 

@@ -279,7 +279,7 @@ cargo run --bin migrate
 
 ```
 cd run/
-bash run.sh
+bash start.sh
 ```
 
 ### Run Tests
